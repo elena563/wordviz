@@ -14,7 +14,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 - Support for both light and dark themes
 
 
-## Installation (coming soon)
+## Installation
 
 Install the latest version from PyPI:
 
