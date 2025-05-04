@@ -242,6 +242,7 @@ class Visualizer:
         z_grid = kde([x_grid.flatten(), y_grid.flatten()]).reshape(x_grid.shape)
         z_grid = np.log1p(z_grid)
 
+        # add contour
         fig.add_trace(go.Contour(
         z=z_grid,
         x=x_grid[0],
@@ -257,6 +258,7 @@ class Visualizer:
         hoverinfo='skip'
         ))
 
+        # add points
         fig.add_trace(go.Scatter(
             x=x, y=y,
             mode='markers',
