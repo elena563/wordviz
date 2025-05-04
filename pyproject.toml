@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordviz"
-version = "0.1.0"
+version = "0.1.1"
 description = "A lightweight Python package for loading, analyzing, and visualizing word embeddings."
 authors = ["Elena Zen <elenazen563@gmail.com>"]
 license = "MIT"
