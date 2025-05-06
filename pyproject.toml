@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "wordviz"
-version = "0.1.1"
+version = "0.1.2"
 description = "A lightweight Python package for loading, analyzing, and visualizing word embeddings."
 authors = ["Elena Zen <elenazen563@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<3.13"
 matplotlib = ">=3.10.1,<4.0.0"
 numpy = ">=1.18.5,<2.0"
 gensim = ">=4.3.3,<5.0.0"

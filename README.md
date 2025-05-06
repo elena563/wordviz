@@ -22,6 +22,15 @@ Install the latest version from PyPI:
 pip install wordviz
 ```
 
+### Notes: Python version compatibility
+
+Currently, wordviz is not compatible with Python 3.13, due to limitations of some key dependencies:
+
+gensim, one of the core libraries used by wordviz, does not yet provide official support or precompiled wheels for Python 3.13.
+
+For proper installation installation, we recommend that you create a virtual environment with Python 3.12.
+The package will be updated as soon as the dependencies are compatible with Python 3.13.
+
 
 ## Usage
 
