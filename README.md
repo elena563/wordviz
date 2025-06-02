@@ -3,6 +3,8 @@
 **WordViz** is a Python visualization library designed for exploring and visualizing word embeddings. Built on top of popular libraries such as `matplotlib`, `plotly`, and `gensim`, WordViz provides intuitive tools for analyzing embeddings through clustering, similarity exploration, and dimensionality reduction, all wrapped in interactive and customizable plots.
 With WordViz, users can gain insights into the structure of their word embeddings, making it a valuable tool for researchers and practitioners in natural language processing.
 
+https://pypi.org/project/wordviz/
+
 ## Main Features
 
 - Load and explore pretrained embeddings (e.g., GloVe, FastText)
@@ -28,7 +30,12 @@ Currently, wordviz is not compatible with Python 3.13, due to limitations of som
 
 gensim, one of the core libraries used by wordviz, does not yet provide official support or precompiled wheels for Python 3.13.
 
-For proper installation installation, we recommend that you create a virtual environment with Python 3.12.
+For proper installation installation, we recommend that you create a virtual environment with Python 3.12, or just use uv:
+
+```bash
+uv init --python 3.12
+```
+
 The package will be updated as soon as the dependencies are compatible with Python 3.13.
 
 
