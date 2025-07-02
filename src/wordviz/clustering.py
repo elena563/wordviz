@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
 from typing import Tuple, Optional
+from scipy.cluster.hierarchy import linkage, fcluster
 from .dim_reduction import reduce_dim
 
 
@@ -34,11 +35,17 @@ def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kme
         reduced_emb = vectors  
 
     match method:
+        case 'hierarchical':
+            Z = linkage(reduced_emb, method='single')
+            labels = fcluster(Z, t=n_clusters, criterion='maxclust') 
+            centers = None
         case 'kmeans':
             clustering = KMeans(n_clusters=n_clusters, random_state=0, n_init="auto").fit(reduced_emb)
+            labels= clustering.labels_
             centers = clustering.cluster_centers_
         case 'dbscan':
             clustering = DBSCAN(eps=0.5, min_samples=n_clusters).fit(reduced_emb)
+            labels= clustering.labels_
             centers = None
 
-    return clustering.labels_, centers, reduced_emb
+    return labels, centers, reduced_emb

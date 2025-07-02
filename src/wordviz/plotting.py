@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import radialtree as rt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
 from scipy.stats import gaussian_kde
+from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
 import warnings
 from .clustering import create_clusters
 from .dim_reduction import reduce_dim
@@ -295,6 +297,72 @@ class Visualizer:
         return fig
     
 
+    def plot_heatmap(self, use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
+        ''' 
+        Creates a heatmap showing every vectorial value of every word.
+
+        Parameters
+        -----------
+        dist : str, default='cosine'
+            Distance metric to use for computing similarity between embeddings.
+        use_subset : bool, default=True
+            If True, uses a subset of the embeddings. Otherwise, uses the full set.
+        n : int, optional
+            Number of embeddings to subset. Ignored if a subset already exists and use_subset is True.
+        theme : str, default='light1'
+            Plot color theme to use.
+        title : str, optional
+            Title for the heatmap. If None, a default title is assigned.
+
+        Returns
+        --------
+        fig : plotly.graph_objects.Figure
+        '''
+
+        if use_subset:
+            if n:
+                self.loader.subset(n)
+                emb = self.loader.embeddings_subset 
+                tokens = self.loader.tokens_subset
+            else:
+                emb, tokens = self.loader.use_subset()
+        else:
+            emb = self.embeddings
+            tokens = self.tokens
+
+        colors = self.get_theme(theme)
+
+        fig = go.Figure(data=go.Heatmap(
+        z=emb,
+        x=[f"Dim {i+1}" for i in range(emb.shape[1])],
+        y=tokens,
+        colorscale=colors['scale'],
+        colorbar=dict(title='Value'),
+        hovertemplate="Word: %{y}<br>Dimension: %{x}<br>Value: %{z:.3f}<extra></extra>"
+        ))
+
+        fig.update_layout(
+            title=title if title else "Esempio di heatmap con Word Embedding",
+            width=800,
+            height=400,
+            plot_bgcolor=colors['bg'],
+            paper_bgcolor=colors['bg'],
+            font=dict(color=colors['text'])
+        )
+
+        fig.update_coloraxes(colorbar_title='Value')
+
+        fig.update_traces(
+            hovertemplate="Word: %{y}<br>Dimension: %{x}<br>Value: %{z}<extra></extra>",
+            hoverlabel=dict(
+                bgcolor=colors['bg'],
+                font=dict(color=colors['text'])
+            )
+        )
+
+        return fig
+    
+
     def similarity_heatmap(self, dist: str = 'cosine', use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
         ''' 
         Creates a heatmap showing pairwise distances between word embeddings.
@@ -423,6 +491,7 @@ class Visualizer:
         plt.rcParams['figure.dpi'] = 600
         plt.show()
         return fig, ax
+    
 
 
     def interactive_embeddings(self, red_method='pca', grid=True, theme='light1', title=None, use_subset=False):
@@ -483,6 +552,46 @@ class Visualizer:
 
         return fig
     
-
     
+    def plot_dendrogram(self, n_clusters=8, red_method='pca', use_subset=False):
+        '''
+        Creates a 2D dendrogram of clustered embeddings using hierarchical clustering.
+        This first version of this function does not include title and theme parameters.
 
+        Parameters:
+        -----------
+        n_clusters : int, default=8
+            Number of clusters to generate.
+        red_method : str, default='pca'
+            Dimensionality reduction method for better interpretability.
+        use_subset : bool, default=False
+            If True, uses the embedding subset instead of the full embeddings.
+
+        Returns:
+        --------
+        fig : matplotlib.figure.Figure
+        '''
+        if use_subset:
+            emb, tokens = self.loader.use_subset()
+        else:
+            emb = self.embeddings
+            tokens = self.tokens
+
+        reduced_emb = reduce_dim(emb, method=red_method)
+
+        Z = linkage(reduced_emb, method='complete')
+        clusters = fcluster(Z, t=n_clusters, criterion='maxclust') 
+        clusters_colors, legend_labels = self.map_colors(clusters)
+
+        Z2 = dendrogram(Z, labels=tokens, no_plot=True)
+        labels  = [v[1] for v in legend_labels.values()] 
+
+        rt.plot(
+            Z2,
+            colorlabels={'cluster': clusters_colors},  
+            colorlabels_legend={'cluster': {            
+                'colors': clusters_colors,
+                'labels': labels
+            }},
+            fontsize=6,            
+        )
