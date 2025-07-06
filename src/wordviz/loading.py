@@ -3,6 +3,7 @@ import shutil
 from gensim.models import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 from  gensim.models.fasttext import load_facebook_model
+import json
 import numpy as np
 import zipfile
 from pathlib import Path
@@ -18,40 +19,9 @@ class EmbeddingLoader:
         self.embeddings_subset = None
         self.tokens_subset = None
 
-        self.available_pretrained = {     
-        'glove': {
-            'en': {
-                'wiki': {
-                    '100d': {
-                    'url': 'https://nlp.stanford.edu/data/glove.6B.zip',
-                    'filename': 'glove.6B.100d.txt'
-                    }
-                },
-                'cc': {
-                    '300d': {
-                        'url': 'https://nlp.stanford.edu/data/glove.42B.300d.zip',
-                        'filename': 'glove.42B.300d.txt'
-                    }
-                },
-                'twitter': {
-                    '100d': {
-                    'url': 'https://nlp.stanford.edu/data/glove.twitter.27B.zip',
-                    'filename': 'glove.twitter.27B.100d.txt'
-                    }
-                }
-            }
-        },
-        'fasttext': {
-            'it': {
-                'cc': {
-                    '300d': {
-                        'url': 'https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.it.300.bin.gz'
-                    }
-                }
-            }
-        }
-    }
-
+        with open(os.path.join(os.path.dirname(__file__), 'pretrained_embeddings.json')) as f:
+            self.available_pretrained = json.load(f)
+            
     def get_cache_dir(self):
         cache_dir = Path.home() / ".wordviz_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
