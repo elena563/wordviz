@@ -2773,8 +2773,10 @@ numpy = "*"
 scipy = "*"
 
 [package.source]
-type = "directory"
-url = "radialtree"
+type = "git"
+url = "https://github.com/koonimaru/radialtree.git"
+reference = "main"
+resolved_reference = "e5b40b695b9d800838102d1a8af74584fc20ff40"
 
 [[package]]
 name = "referencing"
@@ -3733,4 +3735,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "4ebb9104d81eb62e7f2adfbcaef60592af303a6be93345003399e2a529123f5b"
+content-hash = "17bbf73290b7284b5f1fd37aca90569eb64b083747eafb90e802338f78f269db"
