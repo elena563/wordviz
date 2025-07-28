@@ -65,57 +65,7 @@ def word_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = '
             distance = 1 - spearman_corr   
     
     return distance
-
-
-def n_most_similar2(loader: EmbeddingLoader, target_word: str, dist: str = 'cosine', n: int = 10) -> Tuple[List[str], np.ndarray, List[float]]:
-    '''
-    Finds the n most similar words to a given target word using a specified distance metric.
-
-    Parameters
-    -----------
-    loader : EmbeddingLoader
-        An instance of the embedding loader containing word vectors.
-    target_word : str
-        The word for which to find the most similar neighbors.
-    dist : str, default='cosine'
-        The distance metric to use. Options include 'cosine', 'euclidean', etc.
-    n : int, default=10
-        The number of most similar words to retrieve.
-
-    Returns
-    --------
-    words : list of str
-        The most similar words found.
-    vectors : np.ndarray
-        Embedding vectors corresponding to the most similar words.
-    distances : list of float
-        Distances from the target word to each of the most similar words.
-    '''
-    words = loader.tokens
-
-    if target_word not in words:
-        raise ValueError(f'{target_word} is not in vocabulary')
-    
-    topn_vectors = {}
-
-    for word in words:
-        if word == target_word:
-            continue
-
-        distance = word_distance(loader, word, target_word, dist)
-        if len(topn_vectors) < n:
-            topn_vectors[word] = distance
-        else:
-            max_dist_word = max(topn_vectors, key=topn_vectors.get)
-            if distance < topn_vectors[max_dist_word]:
-                del topn_vectors[max_dist_word]
-                topn_vectors[word] = distance
-    
-    vectors = np.array([loader.get_embedding(word) for word in topn_vectors])
-    words = list(topn_vectors.keys())
-    distances = list(topn_vectors.values())
-
-    return words, vectors, distances  
+ 
 
 def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosine', n: int = 10) -> Tuple[List[str], np.ndarray, List[float]]:
     '''
@@ -146,18 +96,15 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
     if target_word not in words:
         raise ValueError(f'{target_word} is not in vocabulary')
     
-    # Ottieni il vettore target
     target_vector = loader.get_embedding(target_word)
     target_index = words.index(target_word)
     
-    # Prepara gli indici di tutte le parole tranne la parola target
     word_indices = list(range(len(words)))
     word_indices.remove(target_index)
     
-    # Sottoinsiemi di parole e vettori corrispondenti
     filtered_words = [words[i] for i in word_indices]
     
-    # Per gestire vocabolari molto grandi, possiamo elaborare per batch
+    # process in batch
     batch_size = 10000
     all_distances = []
     all_indices = []
@@ -166,8 +113,6 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         batch_words = filtered_words[i:i+batch_size]
         batch_vectors = np.array([loader.get_embedding(word) for word in batch_words])
         
-        # Calcola le distanze pairwise tra il vettore target e tutti i vettori batch
-        # Reshape target_vector per ottenere una matrice 1 x dimensione
         distances = pairwise_distances(
             target_vector.reshape(1, -1), 
             batch_vectors, 
@@ -177,15 +122,14 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         all_distances.extend(distances)
         all_indices.extend(range(i, min(i+batch_size, len(filtered_words))))
     
-    # Seleziona gli indici delle n distanze minori
+    # select indices
     if len(all_distances) <= n:
         top_n_indices = np.argsort(all_distances)
     else:
         top_n_indices = np.argpartition(all_distances, n-1)[:n]
-        # Ordina questi n indici per distanza
+        # sort by distance
         top_n_indices = top_n_indices[np.argsort(np.array(all_distances)[top_n_indices])]
     
-    # Ottieni le parole, le distanze e i vettori corrispondenti
     result_words = [filtered_words[all_indices[i]] for i in top_n_indices]
     result_distances = [all_distances[i] for i in top_n_indices]
     result_vectors = np.array([loader.get_embedding(word) for word in result_words])

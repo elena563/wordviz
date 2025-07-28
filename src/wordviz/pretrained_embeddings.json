@@ -1,108 +1,21 @@
-{   
-    "fasttext": {
-        "es": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.es.300.bin.gz",
-                    "filename": "cc.es.300.bin"
-                }
-            }
-        },
-        "fr": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz",
-                    "filename": "cc.fr.300.bin"
-                }
-            }
-        },
-        "hi": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.hi.300.bin.gz",
-                    "filename": "cc.hi.300.bin"
-                }
-            }
-        },
-        "it": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.it.300.bin.gz",
-                    "filename": "cc.it.300.bin"
-                }
-            }
-        },
-        "ru": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.ru.300.bin.gz",
-                    "filename": "cc.ru.300.bin"
-                }
-            }
-        },
-        "zh": {
-            "cc": {
-                "300d": {
-                    "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.zh.300.bin.gz",
-                    "filename": "cc.zh.300.bin"
-                }
-            }
-        }
-    },
-    "glove": {
-        "en": {
-            "wiki": {
-                "50d": {
-                    "url": "https://nlp.stanford.edu/data/glove.6B.zip",
-                    "filename": "glove.6B.50d.txt"
-                },
-                "100d": {
-                    "url": "https://nlp.stanford.edu/data/glove.6B.zip",
-                    "filename": "glove.6B.100d.txt"
-                },
-                "200d": {
-                    "url": "https://nlp.stanford.edu/data/glove.6B.zip",
-                    "filename": "glove.6B.200d.txt"
-                },
-                "300d": {
-                    "url": "https://nlp.stanford.edu/data/glove.6B.zip",
-                    "filename": "glove.6B.300d.txt"
-                }
-            },
-            "cc": {
-                "300d": {
-                    "url": "https://nlp.stanford.edu/data/glove.42B.300d.zip",
-                    "filename": "glove.42B.300d.txt"
-                }
-            },
-            "twitter": {
-                "25d": {
-                    "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
-                    "filename": "glove.twitter.27B.25d.txt"
-                },
-                "50d": {
-                    "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
-                    "filename": "glove.twitter.27B.50d.txt"
-                },
-                "100d": {
-                    "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
-                    "filename": "glove.twitter.27B.100d.txt"
-                },
-                "200d": {
-                    "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
-                    "filename": "glove.twitter.27B.200d.txt"
-                }
-            }
-        }
-    },
-    "word2vec":{
-        "en":{
-            "googlenews":{
-                "300d":{
-                    "url": "https://figshare.com/ndownloader/files/41403483",
-                    "filename": "GoogleNews-vectors-negative300.bin"
-                }
-            }
-        }
-    }
+{
+  "columns": ["model", "lang", "source", "dim", "url", "filename"],
+  "data": [
+    ["fasttext", "es", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.es.300.bin.gz", "cc.es.300.bin"],
+    ["fasttext", "fr", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz", "cc.fr.300.bin"],
+    ["fasttext", "hi", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.hi.300.bin.gz", "cc.hi.300.bin"],
+    ["fasttext", "it", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.it.300.bin.gz", "cc.it.300.bin"],
+    ["fasttext", "ru", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.ru.300.bin.gz", "cc.ru.300.bin"],
+    ["fasttext", "zh", "cc", "300d", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.zh.300.bin.gz", "cc.zh.300.bin"],
+    ["glove", "en", "wiki", "50d", "https://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.50d.txt"],
+    ["glove", "en", "wiki", "100d", "https://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.100d.txt"],
+    ["glove", "en", "wiki", "200d", "https://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.200d.txt"],
+    ["glove", "en", "wiki", "300d", "https://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.300d.txt"],
+    ["glove", "en", "cc", "300d", "https://nlp.stanford.edu/data/glove.42B.300d.zip", "glove.42B.300d.txt"],
+    ["glove", "en", "twitter", "25d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.25d.txt"],
+    ["glove", "en", "twitter", "50d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.50d.txt"],
+    ["glove", "en", "twitter", "100d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.100d.txt"],
+    ["glove", "en", "twitter", "200d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.200d.txt"],
+    ["glove", "en", "googlenews", "300d", "https://figshare.com/ndownloader/files/41403483", "GoogleNews-vectors-negative300.bin"]
+  ]
 }

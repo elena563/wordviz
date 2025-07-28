@@ -29,7 +29,7 @@ def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kme
         2D reduced embeddings used for clustering and plotting.
     '''
 
-    if vectors.shape[1] > 2:
+    if vectors.shape[1] > 3:
         reduced_emb = reduce_dim(vectors)  
     else:
         reduced_emb = vectors  

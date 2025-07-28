@@ -1,0 +1,62 @@
+{ 
+    "light1": {
+            "bg" : "#f5f5fa",
+            "points" : "#66c2a5",
+            "target" : "#e78ac3",
+            "grid_color" : "#cccccc",
+            "grid_style" : "--",
+            "text" : "#1a1a1a",
+            "scale": "Viridis",
+            "clusters": "Set2"
+        },
+    "dark1": {
+            "bg" : "#121212",
+            "points" : "#fc8d62",
+            "target" : "#a6d854",
+            "grid_color" : "#878787",
+            "grid_style" : "--",
+            "text" : "#f0f0f0",
+            "scale": "Plasma",
+            "clusters": "Set2"
+        },
+    "light2": {
+            "bg" : "#dddddd",
+            "points" : "#377eb8",
+            "target" : "#984ea3",
+            "grid_color" : "#727276",
+            "grid_style" : "-",
+            "text" : "#1a1a1a",
+            "scale": "Spring",
+            "clusters": "Set1"
+        },
+    "dark2": {
+            "bg" : "#515050",
+            "points" : "#f781bf",
+            "target" : "#ffff33",
+            "grid_color" : "#A3A2A2",
+            "grid_style" : "-",
+            "text" : "#f0f0f0",
+            "scale": "Cool",
+            "clusters": "Set1"
+        },
+    "light3": {
+            "bg" : "#ededed",
+            "points" : "#a1c9f4",
+            "target" : "#fed9a6",
+            "grid_color" : "#727276",
+            "grid_style" : ":",
+            "text" : "#1a1a1a",
+            "scale": "PuBu",
+            "clusters": "Pastel"
+        },
+    "dark3": {
+            "bg" : "#1a1a1a",
+            "points" : "#fddaec",
+            "target" : "#ccebc5",
+            "grid_color" : "#9E9E9E",
+            "grid_style" : ":",
+            "text" : "#f0f0f0",
+            "scale": "RdPu",
+            "clusters": "Pastel"
+        }
+}

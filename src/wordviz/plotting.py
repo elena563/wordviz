@@ -1,5 +1,8 @@
+import os
+import json
 from adjustText import adjust_text
 import matplotlib.pyplot as plt
+from matplotlib.colors import is_color_like
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
@@ -15,46 +18,65 @@ from .dim_reduction import reduce_dim
 from .similarity import n_most_similar
 
 
-class Visualizer:
+class BaseVisualizer:
     def __init__(self, loader):
         self.loader = loader
         self.tokens = loader.tokens
         self.embeddings = loader.embeddings
 
+        with open(os.path.join(os.path.dirname(__file__), 'themes.json')) as f:
+            self.themes = json.load(f)
+
+    def list_theme_colors(self):
+        '''prints a list of available themes provided by the package'''
+        print('background | points  | target  |   grid   | text')
+        for theme_name, theme in self.themes.items():
+            colors = [v for v in theme.values() if is_color_like(v)]
+            sns.palplot(colors)
+            plt.title(theme_name)
+            plt.show()
 
     def get_theme(self, theme='light1'):
-        themes = { 
-            'light1': {
-                    'bg' : '#f5f5fa',
-                    'points' : '#66c2a5',
-                    'target' : '#e78ac3',
-                    'grid' : '#cccccc',
-                    'text' : '#1a1a1a',
-                    'scale': 'Viridis'
-                },
-            'dark1': {
-                    'bg' : '#1a1a1a',
-                    'points' : '#fc8d62',
-                    'target' : '#a6d854',
-                    'grid' : '#444444',
-                    'text' : '#f0f0f0',
-                    'scale': 'Plasma'
-                }
-        }
-        return themes.get(theme, themes['light1'])
+        return self.themes.get(theme, self.themes['light1'])
+    
+
+    def _set_embeddings(self, use_subset=False, n=None, red_method=None, dims=2):
+        if use_subset:
+            if n:
+                self.loader.subset(n)
+                emb = self.loader.embeddings_subset
+                tokens = self.loader.tokens_subset
+            else:
+                emb, tokens = self.loader.use_subset()
+
+            cache_attr = 'reduced_subset'
+        else:
+            emb = self.embeddings
+            tokens = self.tokens
+            cache_attr = 'reduced'
+
+        if red_method:
+            reduced = getattr(self, cache_attr, None)
+
+            if reduced is None:
+                reduced = reduce_dim(emb, method=red_method, dims=dims)
+                setattr(self, cache_attr, reduced)
+
+            return reduced, tokens
+        return emb, tokens
     
 
     def _setup_plot(self, theme, grid, title):
         '''base private function to config matplotlib plot'''
-        colors = self.get_theme(theme)
+        style = self.get_theme(theme)
 
         fig, ax = plt.subplots(figsize=(10, 8))
 
-        fig.patch.set_facecolor(colors['bg'])
-        ax.set_facecolor(colors['bg'])
+        fig.patch.set_facecolor(style['bg'])
+        ax.set_facecolor(style['bg'])
 
         if grid:  
-            ax.grid(True, linestyle='--', color=colors['grid'], alpha=0.6)
+            ax.grid(True, linestyle=style['grid_style'], color=style['grid_color'], alpha=0.6)
             ax.set_axisbelow(True) 
             ax.tick_params(left=True, bottom=True, labelleft=False, labelbottom=False, color=(0.5, 0.5, 0.5, 0.4))
         else:
@@ -65,15 +87,17 @@ class Visualizer:
             spine.set_visible(False)
 
         if title is not None:
-            plt.title(title, fontsize=12, fontweight='bold', color=colors['text'])
+            plt.title(title, fontsize=12, fontweight='bold', color=style['text'])
 
-        return fig, ax, colors
+        return fig, ax, style
     
 
-    def map_colors(self, labels):
+    def map_colors(self, labels, theme):
         '''automatizes color and legend label mapping for clustering applied to embeddings'''
+        colors = self.get_theme(theme)
+
         unique_classes = list(set(labels))
-        palette = sns.color_palette("Set2", n_colors=len(unique_classes))
+        palette = sns.color_palette(colors['clusters'], n_colors=len(unique_classes))
         class_to_color = dict(zip(unique_classes, palette))
         colors = [class_to_color[label] for label in labels]
         legend_labels = {label: (class_to_color[label], f'Cluster {label+1}') for label in unique_classes}
@@ -92,6 +116,12 @@ class Visualizer:
             indices.append(idx)
 
         return indices
+
+class Visualizer(BaseVisualizer):
+    def __init__(self, loader):
+        super().__init__(loader) 
+        self.reduced = None
+        self.reduced_subset = None
 
 
     def plot_embeddings(self, red_method: str = 'pca', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False):   
@@ -119,13 +149,7 @@ class Visualizer:
         ax : matplotlib.axes.Axes
         '''
 
-        if use_subset:
-            emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
-
-        reduced_emb = reduce_dim(emb, method=red_method)
+        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         fig, ax, colors = self._setup_plot(theme, grid, title)
         ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=colors['points'], alpha=0.5, s=14, marker='o')
@@ -222,13 +246,7 @@ class Visualizer:
         fig : plotly.graph_objs.Figure
         '''
 
-        if use_subset:
-            emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
-
-        reduced_emb = reduce_dim(emb, red_method, dist=dist)
+        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         x = reduced_emb[:, 0]
         y = reduced_emb[:, 1]
@@ -319,16 +337,7 @@ class Visualizer:
         fig : plotly.graph_objects.Figure
         '''
 
-        if use_subset:
-            if n:
-                self.loader.subset(n)
-                emb = self.loader.embeddings_subset 
-                tokens = self.loader.tokens_subset
-            else:
-                emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
+        emb, tokens = self._set_embeddings(use_subset=use_subset, n=n)
 
         colors = self.get_theme(theme)
 
@@ -385,16 +394,7 @@ class Visualizer:
         fig : plotly.graph_objects.Figure
         '''
 
-        if use_subset:
-            if n:
-                self.loader.subset(n)
-                emb = self.loader.embeddings_subset 
-                tokens = self.loader.tokens_subset
-            else:
-                emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
+        emb, tokens = self._set_embeddings(use_subset=use_subset, n=n)
 
         if emb.shape[0] > 500:
             warnings.warn(f"Warning: loading more than 500 embeddings without subsetting will generate more than one heatmap and may result in longer execution times. Consider subsetting before or setting n < 500.")
@@ -453,13 +453,7 @@ class Visualizer:
         ax : matplotlib.axes.Axes
         '''
 
-        if use_subset:
-            emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
-
-        reduced_emb = reduce_dim(emb, method=red_method)
+        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
         clusters_colors, legend_labels = self.map_colors(clusters)
@@ -516,24 +510,18 @@ class Visualizer:
         fig : plotly.graph_objects.Figure
         '''
 
-        if use_subset:
-            emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
+        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
-        reduced_emb = reduce_dim(emb, method=red_method)
+        style = self.get_theme(theme)
 
-        colors = self.get_theme(theme)
-
-        fig = px.scatter(reduced_emb, reduced_emb[:, 0], reduced_emb[:, 1], color_discrete_sequence=[colors['points']])
+        fig = px.scatter(reduced_emb, reduced_emb[:, 0], reduced_emb[:, 1], color_discrete_sequence=[style['points']])
         fig.update_traces(
             text=tokens,
             textposition='top center',
             hovertemplate='%{text}<extra></extra>',
             hoverlabel=dict(
-                bgcolor=colors['bg'], 
-                font=dict(color=colors['text'])),
+                bgcolor=style['bg'], 
+                font=dict(color=style['text'])),
             marker=dict(size=6, opacity=0.6, line=dict(width=0))
         )
         fig.update_layout(
@@ -541,11 +529,11 @@ class Visualizer:
             title=title if title else "Word Embedding Interactive Plot",
             title_x=0.5,
             title_xanchor='center',
-            plot_bgcolor=colors['bg'],
-            paper_bgcolor=colors['bg'],
-            font=dict(color=colors['text']),
-            xaxis=dict(showticklabels=False, showgrid=grid, gridcolor=colors['grid'], zeroline=False),
-            yaxis=dict(showticklabels=False, showgrid=grid, gridcolor=colors['grid'], zeroline=False),
+            plot_bgcolor=style['bg'],
+            paper_bgcolor=style['bg'],
+            font=dict(color=style['text']),
+            xaxis=dict(showticklabels=False, showgrid=grid, gridcolor=style['grid_color'], zeroline=False),
+            yaxis=dict(showticklabels=False, showgrid=grid, gridcolor=style['grid_color'], zeroline=False),
             xaxis_title=None,
             yaxis_title=None
         )
@@ -571,13 +559,7 @@ class Visualizer:
         --------
         fig : matplotlib.figure.Figure
         '''
-        if use_subset:
-            emb, tokens = self.loader.use_subset()
-        else:
-            emb = self.embeddings
-            tokens = self.tokens
-
-        reduced_emb = reduce_dim(emb, method=red_method)
+        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         Z = linkage(reduced_emb, method='complete')
         clusters = fcluster(Z, t=n_clusters, criterion='maxclust') 

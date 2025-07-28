@@ -149,9 +149,16 @@ class EmbeddingLoader:
             Loaded embedding matrix (n_words x dimension).
         '''
 
-        option = self.available_pretrained[model][lang][source][dimension]
-        url = option['url']
-        filename = option['filename']
+        option = next(
+            (item for item in self.available_pretrained
+            if item['model'] == model and item['lang'] == lang and item['source'] == source and item['dim'] == dimension),
+            None
+        )
+        if option:
+            url = option['url']
+            filename = option['filename']
+        else:
+            raise ValueError(f"Can't find pretrained file with parameters: {model}, {lang}, {source}, {dimension}")
         zip_filename = url.split("/")[-1]
 
         zip_path = self.download_zip(url, zip_filename)
@@ -178,11 +185,8 @@ class EmbeddingLoader:
     def list_available_pretrained(self):
         '''prints a list of pretrained embeddings provided by the package'''
         print('model | lang | source | dim')
-        for model, langs in self.available_pretrained.items():
-            for lang, sources in langs.items():
-                for source, dims in sources.items():
-                    for dim in dims:
-                        print(f"{model} | {lang} | {source} | {dim}") 
+        for file in self.available_pretrained['data']:
+            print(" | ".join(x for x in file[:-2]))
 
     
     def get_embedding(self, word):
