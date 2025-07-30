@@ -12,5 +12,4 @@ python:
     - requirements: requirements.txt
 
 sphinx:
-  configuration: docs/source/conf.py
-  build_directory: docs/build
+  configuration: docs/conf.py
