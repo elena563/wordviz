@@ -7,7 +7,7 @@ This project was created as part of my Bachelor's Degree thesis in Statistics an
 
 version 0.2.0
 
-PyPi Page: https://pypi.org/project/wordviz/
+PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
 
 ## Last Version Updates
