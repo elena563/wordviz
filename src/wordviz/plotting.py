@@ -6,7 +6,6 @@ from matplotlib.colors import is_color_like, to_rgb
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import radialtree as rt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
@@ -579,7 +578,8 @@ class Visualizer(BaseVisualizer):
         --------
         fig : matplotlib.figure.Figure
         '''
-        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
+        raise NotImplementedError("This function is temporarely disabled due to requirements issues. It will be restored in the next package version :)")
+        '''reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         Z = linkage(reduced_emb, method='complete')
         clusters = fcluster(Z, t=n_clusters, criterion='maxclust') 
@@ -596,4 +596,4 @@ class Visualizer(BaseVisualizer):
                 'labels': labels
             }},
             fontsize=6,            
-        )
+        )'''

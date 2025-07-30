@@ -2796,27 +2796,6 @@ files = [
 cffi = {version = "*", markers = "implementation_name == \"pypy\""}
 
 [[package]]
-name = "radialtree"
-version = "0.1.0"
-description = "Drawing radial dendrogram."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = []
-develop = false
-
-[package.dependencies]
-matplotlib = "*"
-numpy = "*"
-scipy = "*"
-
-[package.source]
-type = "git"
-url = "https://github.com/koonimaru/radialtree.git"
-reference = "main"
-resolved_reference = "e5b40b695b9d800838102d1a8af74584fc20ff40"
-
-[[package]]
 name = "referencing"
 version = "0.36.2"
 description = "JSON Referencing + Python"
@@ -3819,4 +3798,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "17bbf73290b7284b5f1fd37aca90569eb64b083747eafb90e802338f78f269db"
+content-hash = "dbbbb657b027c280d9cbdbf736c7f7d956d905984fe39a78839bad24a431a61e"

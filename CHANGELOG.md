@@ -6,3 +6,4 @@
 - 4 options of 3D plots analogous to 2D versions
 - 4 new aesthetic themes: light2, dark2, light3, dark3
 - optimized available pretrained json structure
+- temporarily removed radialtree for issues, plot_dendrogram is not available at the moment

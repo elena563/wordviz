@@ -9,7 +9,6 @@ adjusttext
 umap-learn
 ipykernel
 jupyter
-radialtree
 pytest
 black
 isort
