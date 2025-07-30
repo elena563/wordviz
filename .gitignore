@@ -28,4 +28,5 @@ htmlcov/
 Thumbs.db
 
 src/wordviz/prova.ipynb
-*.txt
+docs/glove_w2v.txt
+src/wordviz/glove_w2v.txt
