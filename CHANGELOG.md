@@ -1,4 +1,4 @@
-## [0.2.0] - 28/07/2025
+## [0.2.0] - 30/07/2025
 ### Added
 - new class Visualizer3D and parent class BaseVisualizer
 - new 'reduced' parameter to Visualizer classes and 'auto' value for red_method in plot functions to automatically use cached reduced embeddings
