@@ -149,12 +149,13 @@ class EmbeddingLoader:
             Loaded embedding matrix (n_words x dimension).
         '''
 
+        columns = self.available_pretrained["columns"]
         option = next(
-            (item for item in self.available_pretrained
-            if item['model'] == model and item['lang'] == lang and item['source'] == source and item['dim'] == dimension),
+            (dict(zip(columns, row)) for row in self.available_pretrained["data"]
+            if row[0] == model and row[1] == lang and row[2] == source and row[3] == dimension),
             None
         )
-        if option:
+        if option is not None:
             url = option['url']
             filename = option['filename']
         else:

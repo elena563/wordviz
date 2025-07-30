@@ -51,7 +51,7 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
     if method in default_params:
         params = {**default_params[method.lower()], **kwargs}
     else:
-        raise ValueError(f"Method {method} not supported. Choose between 'pca', 'tsne', 'umap' or 'isomap'")
+        raise ValueError(f"Method {method} not supported. Choose between 'pca', 'tsne', 'umap', 'isomap' or 'mds'")
 
     match method.lower():
         case 'pca':

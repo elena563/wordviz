@@ -2,7 +2,7 @@ import os
 import json
 from adjustText import adjust_text
 import matplotlib.pyplot as plt
-from matplotlib.colors import is_color_like
+from matplotlib.colors import is_color_like, to_rgb
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
@@ -55,22 +55,42 @@ class BaseVisualizer:
             tokens = self.tokens
             cache_attr = 'reduced'
 
-        if red_method:
-            reduced = getattr(self, cache_attr, None)
+        if red_method is not None:
+            if red_method == 'auto':
+                reduced = getattr(self, cache_attr, None)
 
-            if reduced is None:
-                reduced = reduce_dim(emb, method=red_method, dims=dims)
+                if reduced is None:
+                    reduced = reduce_dim(emb, method='pca', n_dimensions=dims)
+                    setattr(self, cache_attr, reduced)
+            else:
+                reduced = reduce_dim(emb, method=red_method, n_dimensions=dims)
                 setattr(self, cache_attr, reduced)
 
             return reduced, tokens
+        
         return emb, tokens
     
 
-    def _setup_plot(self, theme, grid, title):
+    def _setup_plot(self, theme, grid, title, dims=2):
         '''base private function to config matplotlib plot'''
         style = self.get_theme(theme)
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        if dims == 2:
+            fig, ax = plt.subplots(figsize=(12, 8))
+        else:
+            fig = plt.figure(figsize=(12, 8))
+            ax = fig.add_subplot(111, projection='3d')
+
+            bg = to_rgb(style['bg'])
+            ax.set_facecolor(style['bg'])
+            ax.xaxis.set_pane_color((*bg, 1.0))
+            ax.yaxis.set_pane_color((*bg, 1.0))
+            ax.zaxis.set_pane_color((*bg, 1.0))
+
+            if grid:
+                ax.xaxis.gridlines.set_color(style['grid_color'])
+                ax.yaxis.gridlines.set_color(style['grid_color'])
+                ax.zaxis.gridlines.set_color(style['grid_color'])
 
         fig.patch.set_facecolor(style['bg'])
         ax.set_facecolor(style['bg'])
@@ -124,14 +144,14 @@ class Visualizer(BaseVisualizer):
         self.reduced_subset = None
 
 
-    def plot_embeddings(self, red_method: str = 'pca', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False):   
+    def plot_embeddings(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False):   
         '''
         Creates a simple static 2D scatterplot of the embeddings.
 
         Parameters
         -----------
-        red_method : str, default='pca'
-            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.).
+        red_method : str, default='auto'
+            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             If True, displays a background grid on the plot.
         theme : str, default='light1'
@@ -167,7 +187,7 @@ class Visualizer(BaseVisualizer):
         return fig, ax
     
     
-    def plot_similarity(self, target_word: str, dist: str = 'cosine', n: int = 10, red_method: str = 'umap', grid: bool = True, theme: str = 'light1', title: str = None):
+    def plot_similarity(self, target_word: str, dist: str = 'cosine', n: int = 10, red_method: str = 'pca', grid: bool = True, theme: str = 'light1', title: str = None):
         '''
         Creates a scatterplot showing the most similar words to a target word.
 
@@ -179,7 +199,7 @@ class Visualizer(BaseVisualizer):
             Distance metric to use when computing word similarity.
         n : int, default=10
             Number of similar words to display.
-        red_method : str, default='umap'
+        red_method : str, default='pca'
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.).
         grid : bool, default=True
             If True, displays a background grid on the plot.
@@ -222,7 +242,7 @@ class Visualizer(BaseVisualizer):
         return fig, ax
 
 
-    def plot_topography(self, dist: str = 'cosine', red_method: str = 'isomap', use_subset: bool = True, grid: bool = True, theme: str = 'light1', title: str = None):       
+    def plot_topography(self, red_method: str = 'auto', use_subset: bool = True, grid: bool = True, theme: str = 'light1', title: str = None):       
         '''
         Plots word embeddings in a topographical map using dimensionality reduction to maintain word distances in the representation. Allows to visualize word density in the space.
 
@@ -230,8 +250,8 @@ class Visualizer(BaseVisualizer):
         -----------
         dist : str, default='cosine'
             The distance metric to use for word similarity. Options include 'cosine', 'euclidean', etc.
-        red_method : str, default='isomap'
-            The dimensionality reduction method to use for visualizing the word embeddings, maintaining word distances. Options include 'umap', 'isomap', and 'mds'.
+        red_method : str, default='auto'
+            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         use_subset : bool, default=True
             If True, uses a subset of the embeddings for visualization. This is recommended in this plot for larger embeddings.
         grid : bool, default=True
@@ -422,7 +442,7 @@ class Visualizer(BaseVisualizer):
         return fig
     
 
-    def plot_clusters(self, n_clusters=5, method='kmeans', red_method='pca', show_centers=False, grid=True, theme='light1', title=None, nlabels=0, use_subset=False):
+    def plot_clusters(self, n_clusters=5, method='kmeans', red_method='auto', show_centers=False, grid=True, theme='light1', title=None, nlabels=0, use_subset=False):
         '''
         Creates a 2D scatterplot of clustered embeddings using a clustering algorithm.
 
@@ -432,8 +452,8 @@ class Visualizer(BaseVisualizer):
             Number of clusters to generate.
         method : str, default='kmeans'
             Clustering method to use ('kmeans' or others supported by create_clusters).
-        red_method : str, default='pca'
-            Dimensionality reduction method to apply before plotting.
+        red_method : str, default='auto'
+            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         show_centers : bool, default=False
             If True, displays cluster centers on the plot.
         grid : bool, default=True
@@ -456,7 +476,7 @@ class Visualizer(BaseVisualizer):
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
-        clusters_colors, legend_labels = self.map_colors(clusters)
+        clusters_colors, legend_labels = self.map_colors(clusters, theme=theme)
 
         fig, ax, colors = self._setup_plot(theme, grid, title)
         ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=clusters_colors, alpha=0.5, s=14, marker='o')
@@ -488,14 +508,14 @@ class Visualizer(BaseVisualizer):
     
 
 
-    def interactive_embeddings(self, red_method='pca', grid=True, theme='light1', title=None, use_subset=False):
+    def interactive_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
         '''
         Creates an interactive 2D scatterplot of embeddings using Plotly.
 
         Parameters:
         -----------
-        red_method : str, default='pca'
-            Dimensionality reduction method to apply before plotting.
+        red_method : str, default='auto'
+            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             Whether to display grid lines.
         theme : str, default='light1'
@@ -525,7 +545,7 @@ class Visualizer(BaseVisualizer):
             marker=dict(size=6, opacity=0.6, line=dict(width=0))
         )
         fig.update_layout(
-            height=600,
+            height=500,
             title=title if title else "Word Embedding Interactive Plot",
             title_x=0.5,
             title_xanchor='center',
@@ -541,7 +561,7 @@ class Visualizer(BaseVisualizer):
         return fig
     
     
-    def plot_dendrogram(self, n_clusters=8, red_method='pca', use_subset=False):
+    def plot_dendrogram(self, n_clusters=8, red_method='auto', use_subset=False):
         '''
         Creates a 2D dendrogram of clustered embeddings using hierarchical clustering.
         This first version of this function does not include title and theme parameters.
@@ -550,8 +570,8 @@ class Visualizer(BaseVisualizer):
         -----------
         n_clusters : int, default=8
             Number of clusters to generate.
-        red_method : str, default='pca'
-            Dimensionality reduction method for better interpretability.
+        red_method : str, default='auto'
+            Dimensionality reduction method for better interpretability ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
 

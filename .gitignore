@@ -26,3 +26,6 @@ htmlcov/
 # system files
 .DS_Store
 Thumbs.db
+
+src/wordviz/prova.ipynb
+*.txt
