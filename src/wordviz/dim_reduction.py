@@ -42,7 +42,7 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
 
     default_params = {
         'pca': {},
-        'tsne': {'random_state': 42, 'perplexity': 30},
+        'tsne': {'random_state': 42, 'perplexity': 10},
         'umap': {'n_neighbors': 15, 'min_dist': 0.1, 'random_state': 42},
         'isomap': {'n_neighbors': 5},
         'mds': {'metric':True, 'n_init':3, 'max_iter':300, 'random_state':42, 'dissimilarity': 'euclidean'}
@@ -63,6 +63,7 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
         case 'isomap': 
             reducer = Isomap(n_components=n_dimensions, **params)
         case 'mds':
+            params.pop('dissimilarity', None)
             reducer = MDS(n_components=n_dimensions,
                         dissimilarity='euclidean' if dist == 'euclidean' else 'precomputed', **params)
             if dist != 'precomputed' and dist != 'euclidean':

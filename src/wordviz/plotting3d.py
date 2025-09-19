@@ -182,6 +182,11 @@ class Visualizer3D(BaseVisualizer):
         --------
         fig : plotly.graph_objects.Figure
         '''
+        warnings.warn(
+            "The parameter names target_word will be renamed to target in a future release. "
+            "Please update your code accordingly.",
+            FutureWarning
+        )
         similar_words, similar_vecs, _ = n_most_similar(self.loader, target_word, dist, n)
         target_vec = self.loader.get_embedding(target_word)
         vectors = np.vstack([target_vec.reshape(1, -1), similar_vecs])

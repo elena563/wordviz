@@ -8,7 +8,7 @@ from wordviz.loading import EmbeddingLoader
 
 def word_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = 'cosine') -> float:
     '''
-    Computes distance between two words given by user.
+    Computes distance between two words given by user. Also supports sentence distance.
 
     Parameters
     -----------
@@ -32,6 +32,11 @@ def word_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = '
     --------
     distance: float
     '''
+    warnings.warn(
+        "The parameter names word1/word2 will be renamed to item1/item2 in a future release. "
+        "Please update your code accordingly.",
+        FutureWarning
+    )
     words = loader.tokens
 
     missing = [w for w in (word1, word2) if w not in words]
@@ -69,7 +74,7 @@ def word_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = '
 
 def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosine', n: int = 10) -> Tuple[List[str], np.ndarray, List[float]]:
     '''
-    Findsspairwise the n most similar words to a given target word using a specified distance metric.
+    Finds pairwise the n most similar words to a given target word using a specified distance metric.
     
     Parameters
     -----------
@@ -91,6 +96,11 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
     distances : list of float
         Distances from the target word to each of the most similar words.
     '''
+    warnings.warn(
+        "The parameter names target_word will be renamed to target in a future release. "
+        "Please update your code accordingly.",
+        FutureWarning
+    )
     words = loader.tokens
     
     if target_word not in words:
@@ -113,11 +123,9 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         batch_words = filtered_words[i:i+batch_size]
         batch_vectors = np.array([loader.get_embedding(word) for word in batch_words])
         
-        distances = pairwise_distances(
-            target_vector.reshape(1, -1), 
-            batch_vectors, 
-            metric=dist
-        ).flatten()
+        X = np.vstack([target_vector, batch_vectors])
+        D = compute_distances(X, metric=dist)
+        distances = D[0, 1:] 
         
         all_distances.extend(distances)
         all_indices.extend(range(i, min(i+batch_size, len(filtered_words))))
@@ -135,3 +143,27 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
     result_vectors = np.array([loader.get_embedding(word) for word in result_words])
     
     return result_words, result_vectors, result_distances
+
+
+
+def compute_distances(X, metric='euclidean'):
+    if metric in ['euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev']:
+        return pairwise_distances(X, metric=metric)
+    elif metric == 'dot':
+        # dot
+        return 1 - (X @ X.T)
+    elif metric == 'pearson':
+        # pearson
+        corr = np.corrcoef(X)
+        return 1 - corr
+    elif metric == 'spearman':
+        # spearman
+        n = X.shape[0]
+        dist_mat = np.zeros((n, n))
+        for i in range(n):
+            for j in range(i, n):
+                r, _ = spearmanr(X[i], X[j])
+                dist_mat[i, j] = dist_mat[j, i] = 1 - r
+        return dist_mat
+    else:
+        raise ValueError(f"Unknown metric: {metric}")

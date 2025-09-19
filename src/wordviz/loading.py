@@ -11,11 +11,33 @@ import urllib.request
 
 
 class EmbeddingLoader:
+    class EmbeddingLoader:
+        """
+        Loads word or sentence embedding.
+
+        Attributes
+        ----------
+        embeddings_raw : Any
+            KeyedVectors format for static embeddings
+        embeddings : np.ndarray
+            Array of embeddings
+        tokens : list of str
+            Representative elements for the embeddings in natural language (words, sentences, or other elements to visualize)
+        dimension : int
+            Dimensionality of the embeddings.
+        type: str
+            Type of embedding
+            - 'word': word embeddings
+            - 'sentence': Sentence/document/passage embeddings
+            - 'word_context': Word embeddings in different contexts  
+            - 'custom': User-defined
+        """
     def __init__(self):
         self.embeddings_raw = None 
         self.embeddings = None      
         self.tokens = None         
         self.dimension = None
+        self.type = None
         self.embeddings_subset = None
         self.tokens_subset = None
 
@@ -96,6 +118,7 @@ class EmbeddingLoader:
 
         self.tokens = list(self.embeddings_raw.index_to_key)
         self.dimension = self.embeddings_raw.vector_size
+        self.type = 'word'
 
         words = self.embeddings_raw.index_to_key
         self.embeddings = np.array([self.embeddings_raw.get_vector(word) for word in words])
@@ -182,6 +205,58 @@ class EmbeddingLoader:
 
         return self.embeddings
     
+    
+    def load_contextual(self, embeddings, labels, embedding_type='sentences') -> np.ndarray:
+        """
+        Loads embeddings from contextual models.
+        
+        Parameters
+        -----------
+        embeddings: various formats
+            - numpy.ndarray
+            - torch.Tensor
+            - List[List[float]] 
+        labels: list of str
+            labels corresponding to embedding 
+        embedding_type: str
+            - 'sentence': Sentence/document/passage embeddings
+            - 'word_context': Word embeddings in different contexts  
+            - 'word': word embeddings
+            - 'custom': User-defined
+        Returns
+        --------
+        np.ndarray
+            Loaded embedding matrix (n_labels x dimension).
+        """
+        
+        embeddings_array = self._normalize_embeddings(embeddings)
+        
+        self.embeddings = embeddings_array  
+        self.tokens = labels
+        self.dimension = embeddings_array.shape[1]
+        self.type = embedding_type
+        print("Contextual embedding loaded")
+        
+        return self.embeddings
+
+    def _normalize_embeddings(self, embeddings):
+        """Converts embeddings to numpy array."""
+
+        if isinstance(embeddings, np.ndarray):
+            return embeddings.astype(np.float32)
+         
+        elif hasattr(embeddings, 'detach'):  # torch.Tensor
+            return embeddings.detach().cpu().numpy().astype(np.float32)
+        
+        elif isinstance(embeddings, list):
+            return np.array(embeddings, dtype=np.float32)
+        
+        else:
+            try:
+                return np.array(embeddings, dtype=np.float32)
+            except:
+                raise ValueError(f"Cannot convert embeddings of type {type(embeddings)} to numpy array")
+
 
     def list_available_pretrained(self):
         '''prints a list of pretrained embeddings provided by the package'''
@@ -190,11 +265,15 @@ class EmbeddingLoader:
             print(" | ".join(x for x in file[:-2]))
 
     
-    def get_embedding(self, word):
+    def get_embedding(self, token):
         '''returns corresponding embeddings using KeyedVectors object for a string given by the user'''
-        if isinstance(word, str):
-            if word in self.embeddings_raw:
-                return self.embeddings_raw[word]
+        if self.type in ["sentence", "word_context"]:
+            index = self.tokens.index(token)
+            return self.embeddings[index]
+        elif self.type == "word":
+            return self.embeddings[token]
+        else:
+            return None
             
 
     def subset(self, n: int = 1000, strategy: str = 'first', random_seed: int = None):

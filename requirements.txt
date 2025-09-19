@@ -13,3 +13,4 @@ pytest
 black
 isort
 sphinx
+sphinx-rtd-theme

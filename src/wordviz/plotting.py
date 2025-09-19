@@ -8,13 +8,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise_distances
 from scipy.stats import gaussian_kde
 from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
 import warnings
 from .clustering import create_clusters
 from .dim_reduction import reduce_dim
-from .similarity import n_most_similar
+from .similarity import n_most_similar, compute_distances
 
 
 class BaseVisualizer:
@@ -212,6 +211,11 @@ class Visualizer(BaseVisualizer):
         fig : matplotlib.figure.Figure
         ax : matplotlib.axes.Axes
         '''
+        warnings.warn(
+            "The parameter names target_word will be renamed to target in a future release. "
+            "Please update your code accordingly.",
+            FutureWarning
+        )
         similar_words, similar_vecs, _ = n_most_similar(self.loader, target_word, dist, n)
         target_vec = self.loader.get_embedding(target_word)
         vectors = np.vstack([target_vec.reshape(1, -1), similar_vecs])
@@ -247,8 +251,6 @@ class Visualizer(BaseVisualizer):
 
         Parameters
         -----------
-        dist : str, default='cosine'
-            The distance metric to use for word similarity. Options include 'cosine', 'euclidean', etc.
         red_method : str, default='auto'
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         use_subset : bool, default=True
@@ -391,7 +393,7 @@ class Visualizer(BaseVisualizer):
         return fig
     
 
-    def similarity_heatmap(self, dist: str = 'cosine', use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
+    def plot_similarity_heatmap(self, dist: str = 'cosine', use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
         ''' 
         Creates a heatmap showing pairwise distances between word embeddings.
 
@@ -418,7 +420,7 @@ class Visualizer(BaseVisualizer):
         if emb.shape[0] > 500:
             warnings.warn(f"Warning: loading more than 500 embeddings without subsetting will generate more than one heatmap and may result in longer execution times. Consider subsetting before or setting n < 500.")
         
-        distances = pairwise_distances(emb, metric=dist)
+        distances = compute_distances(emb, metric=dist)
 
         colors = self.get_theme(theme)
 
@@ -440,8 +442,38 @@ class Visualizer(BaseVisualizer):
 
         return fig
     
+    def similarity_heatmap(self, dist: str = 'cosine', use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
+        '''
+        DEPRECATED: This method will be renamed to `plot_interactive` in a future release.
 
-    def plot_clusters(self, n_clusters=5, method='kmeans', red_method='auto', show_centers=False, grid=True, theme='light1', title=None, nlabels=0, use_subset=False):
+        Parameters
+        -----------
+        dist : str, default='cosine'
+            Distance metric to use for computing similarity between embeddings.
+        use_subset : bool, default=True
+            If True, uses a subset of the embeddings. Otherwise, uses the full set.
+        n : int, optional
+            Number of embeddings to subset. Ignored if a subset already exists and use_subset is True.
+        theme : str, default='light1'
+            Plot color theme to use.
+        title : str, optional
+            Title for the heatmap. If None, a default title is assigned.
+
+        Returns
+        --------
+        fig : plotly.graph_objects.Figure
+        '''
+        warnings.warn(
+            "interactive_embeddings is deprecated and will be renamed to plot_interactive in a future release. "
+            "Please update your code accordingly.",
+            FutureWarning
+        )
+        return self.plot_similarity_heatmap(dist=dist, use_subset= use_subset, n=n, theme=theme, title=title)
+        
+    
+    
+
+    def plot_clusters(self, n_clusters: int = 5, method: str ='kmeans', red_method: str ='auto', show_centers: bool =False, grid: bool =True, theme: str ='light1', title: str =None, nlabels: int =0, use_subset: bool =False):
         '''
         Creates a 2D scatterplot of clustered embeddings using a clustering algorithm.
 
@@ -506,8 +538,7 @@ class Visualizer(BaseVisualizer):
         return fig, ax
     
 
-
-    def interactive_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
+    def plot_interactive(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
         '''
         Creates an interactive 2D scatterplot of embeddings using Plotly.
 
@@ -559,6 +590,34 @@ class Visualizer(BaseVisualizer):
 
         return fig
     
+    def interactive_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
+        '''
+        DEPRECATED: This method will be renamed to `plot_interactive` in a future release.
+
+        Parameters:
+        -----------
+        red_method : str, default='auto'
+            Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
+        grid : bool, default=True
+            Whether to display grid lines.
+        theme : str, default='light1'
+            Plot color theme.
+        title : str, optional
+            Title of the plot. If None, no title is shown.
+        use_subset : bool, default=False
+            If True, uses the embedding subset instead of the full embeddings.
+
+        Returns:
+        --------
+        fig : plotly.graph_objects.Figure
+        '''
+        warnings.warn(
+            "interactive_embeddings is deprecated and will be renamed to plot_interactive in a future release. "
+            "Please update your code accordingly.",
+            FutureWarning
+        )
+        return self.plot_interactive(red_method=red_method, grid=grid, theme=theme, title=title, use_subset=use_subset)
+        
     
     def plot_dendrogram(self, n_clusters=8, red_method='auto', use_subset=False):
         '''
@@ -578,7 +637,7 @@ class Visualizer(BaseVisualizer):
         --------
         fig : matplotlib.figure.Figure
         '''
-        raise NotImplementedError("This function is temporarely disabled due to requirements issues. It will be restored in the next package version :)")
+        raise NotImplementedError("This function is temporarely disabled due to requirements issues. It will be restored in a future package version :)")
         '''reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         Z = linkage(reduced_emb, method='complete')

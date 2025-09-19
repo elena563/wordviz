@@ -1,22 +1,33 @@
-![image](images/logo.png)
+![image](https://github.com/elena563/wordviz/blob/master/images/logo.png)
 
 **WordViz** is a Python visualization library designed for exploring and visualizing word embeddings. Built on top of popular libraries such as `matplotlib`, `plotly`, and `gensim`, WordViz provides intuitive tools for analyzing embeddings through clustering, similarity exploration, and dimensionality reduction, all wrapped in interactive and customizable plots.
 With WordViz, users can gain insights into the structure of their word embeddings, making it a valuable tool for researchers and practitioners in natural language processing.
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.2.0
+version 0.3.0
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
 
 ## Last Version Updates
-- new class Visualizer3D and parent class BaseVisualizer
-- new 'reduced' parameter to Visualizer classes and 'auto' value for red_method in plot functions to automatically use cached reduced embeddings
-- private _set_embeddings function to handle embeddings use
-- 4 options of 3D plots analogous to 2D versions
-- 4 new aesthetic themes: light2, dark2, light3, dark3
-- optimized available pretrained json structure  
+### Added
+- Support for contextual embeddings with two modes:
+  * `sentences`: visualize entire sentences
+  * `word_contexts`: visualize and compare multiple embeddings of the same word in different contexts
+- New `encoding` module to embed sentences and words in different contexts, supported by Transformers and PyTorch (optional requirements)
+- `load_contextual` method for `EmbeddingLoader` class
+- New `type` property for `EmbeddingLoader` class
+
+### Deprecated
+- From `/plotting`:
+  * `interactive_embeddings` will change name to `plot_interactive` (FutureWarning added)
+  * `similarity_heatmap` will change name to `plot_similarity_heatmap` (FutureWarning added)
+- Warnings added for imminent property name changes in similarity module and `plot_similarity` (no breaking changes yet)
+
+### Fixed
+- Fixed doubled parameter bug in MDS dimensionality reduction
+- Fixed support to pairwise distances for all distance types
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
