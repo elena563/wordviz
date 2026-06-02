@@ -9,6 +9,8 @@ adjusttext
 umap-learn
 ipykernel
 jupyter
+torch
+transformers
 pytest
 black
 isort

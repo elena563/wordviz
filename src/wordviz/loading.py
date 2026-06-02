@@ -11,8 +11,7 @@ import urllib.request
 
 
 class EmbeddingLoader:
-    class EmbeddingLoader:
-        """
+    """
         Loads word or sentence embedding.
 
         Attributes
@@ -206,7 +205,7 @@ class EmbeddingLoader:
         return self.embeddings
     
     
-    def load_contextual(self, embeddings, labels, embedding_type='sentences') -> np.ndarray:
+    def load_contextual(self, embeddings, labels, embedding_type='sentence') -> np.ndarray:
         """
         Loads embeddings from contextual models.
         
@@ -267,13 +266,28 @@ class EmbeddingLoader:
     
     def get_embedding(self, token):
         '''returns corresponding embeddings using KeyedVectors object for a string given by the user'''
-        if self.type in ["sentence", "word_context"]:
-            index = self.tokens.index(token)
+        if self.embeddings is None:
+            raise RuntimeError("No embeddings loaded.")
+        if self.type in ("sentence", "word_context"):
+            try:
+                index = self.tokens.index(token)
+            except ValueError:
+                raise KeyError(f"Token '{token}' not found")
             return self.embeddings[index]
         elif self.type == "word":
-            return self.embeddings[token]
+            # prefer keyed vectors if available
+            if getattr(self, "embeddings_raw", None) is not None:
+                try:
+                    return self.embeddings_raw.get_vector(token)
+                except Exception:
+                    pass
+            try:
+                idx = self.tokens.index(token)
+            except ValueError:
+                raise KeyError(f"Token '{token}' not found")
+            return self.embeddings[idx]
         else:
-            return None
+            raise RuntimeError("Unknown embedding type")
             
 
     def subset(self, n: int = 1000, strategy: str = 'first', random_seed: int = None):
@@ -298,7 +312,10 @@ class EmbeddingLoader:
             List of selected token strings.
         self.embeddings_subset : np.ndarray
             Corresponding selected embedding vectors.
-    '''
+        '''
+        if self.embeddings is None or self.tokens is None:
+            raise RuntimeError("No embeddings loaded. Call load_from_file / load_contextual first.")
+        
         if n > len(self.tokens):
             print('n is larger than the embedding size, the subset size will be equal to the full size')
 
