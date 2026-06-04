@@ -1,4 +1,10 @@
-## [0.3.0] - /09/2025
+## [0.3.1] - /10/2025
+### Fixed
+- Restored `plot_dendrogram` function, adapted from radialtree function belonging to https://github.com/koonimaru/omniplot by koonimaru (MIT License)
+- Fixed automatic optional dependency installation for `encoding` module
+- Fixed other urgent bugs
+
+## [0.3.0] - 19/09/2025
 ### Added
 - Support for contextual embeddings with two modes:
   * `sentences`: visualize entire sentences
@@ -20,13 +26,12 @@
 
 ## [0.2.0] - 30/07/2025
 ### Added
-- new class Visualizer3D and parent class BaseVisualizer
-- new 'reduced' parameter to Visualizer classes and 'auto' value for red_method in plot functions to automatically use cached reduced embeddings
-- private _set_embeddings function to handle embeddings use
+- new class `Visualizer3D` and parent class `BaseVisualizer`
+- new 'reduced' parameter to Visualizer classes and 'auto' value for `red_method` in plot functions to automatically use cached reduced embeddings
+- private `_set_embeddings` function to handle embeddings use
 - 4 options of 3D plots analogous to 2D versions
 - 4 new aesthetic themes: light2, dark2, light3, dark3
 - optimized available pretrained json structure
-- temporarily removed radialtree for issues, plot_dendrogram is not available at the moment
 
 ### Disabled
 - plot_dendrogram function due to requirements issues, it will be restored in future versions

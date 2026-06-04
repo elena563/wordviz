@@ -1,0 +1,74 @@
+import numpy as np
+
+def compute_positions(node, leaf_counter, n_leaves, max_dist, 
+                      leaf_angles, node_positions):
+    """
+    Recursively computes the angular and radial positions of each node in the dendrogram.
+    Returns: (angolo_centrale, lista_foglie_discendenti)
+    """
+    if node.is_leaf():
+        angle = 2 * np.pi * leaf_counter[0] / n_leaves
+        leaf_counter[0] += 1
+        leaf_angles[node.id] = angle
+        node_positions[node.id] = (angle, 1.0)
+        return angle, [node.id]
+    else:
+        left_angle, left_leaves = compute_positions(node.left, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+        right_angle, right_leaves = compute_positions(node.right, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+
+        all_leaves = left_leaves + right_leaves
+        angles = [leaf_angles[lid] for lid in all_leaves]
+        
+        angles_sorted = sorted(angles)
+        if angles_sorted[-1] - angles_sorted[0] > np.pi:
+            gaps = [(angles_sorted[i+1] - angles_sorted[i], i) 
+                    for i in range(len(angles_sorted)-1)]
+            gaps.append((2*np.pi - angles_sorted[-1] + angles_sorted[0], len(angles_sorted)-1))
+            max_gap, gap_idx = max(gaps)
+            
+            threshold = (angles_sorted[gap_idx] + max_gap/2) % (2*np.pi)
+            angles_adjusted = [(a + 2*np.pi if a < threshold else a) for a in angles]
+            mean_angle = np.mean(angles_adjusted) % (2 * np.pi)
+        else:
+            mean_angle = np.mean(angles)
+        
+        # radius is inversely proportional to distance from root
+        radius = 1.0 - (node.dist / max_dist if max_dist > 0 else 0)
+        node_positions[node.id] = (mean_angle, radius)
+        return mean_angle, all_leaves
+    
+
+def draw_tree(node, ax, node_positions, line_color='black', linewidth=1.0):
+    """Recursively draws the branches of the dendrogram."""
+    if not node.is_leaf():
+        parent_angle, parent_radius = node_positions[node.id]
+        
+        left_angle, left_radius = node_positions[node.left.id]
+        right_angle, right_radius = node_positions[node.right.id]
+        
+        for child_angle, child_radius in [(left_angle, left_radius), 
+                                            (right_angle, right_radius)]:
+            ax.plot([child_angle, child_angle], 
+                    [parent_radius, child_radius],
+                    color=line_color, linewidth=linewidth, zorder=1)
+        
+        if abs(right_angle - left_angle) > np.pi:
+            if left_angle < right_angle:
+                arc_angles_1 = np.linspace(left_angle, 2*np.pi, 30)
+                arc_angles_2 = np.linspace(0, right_angle, 30)
+            else:
+                arc_angles_1 = np.linspace(right_angle, 2*np.pi, 30)
+                arc_angles_2 = np.linspace(0, left_angle, 30)
+            ax.plot(arc_angles_1, [parent_radius]*len(arc_angles_1),
+                    color=line_color, linewidth=linewidth, zorder=1)
+            ax.plot(arc_angles_2, [parent_radius]*len(arc_angles_2),
+                    color=line_color, linewidth=linewidth, zorder=1)
+        else:
+            start_angle = min(left_angle, right_angle)
+            end_angle = max(left_angle, right_angle)
+            arc_angles = np.linspace(start_angle, end_angle, 50)
+            ax.plot(arc_angles, [parent_radius]*len(arc_angles),
+                    color=line_color, linewidth=linewidth, zorder=1)
+        
+        draw_tree(node.left, ax, node_positions, line_color, linewidth)
+        draw_tree(node.right, ax, node_positions, line_color, linewidth)

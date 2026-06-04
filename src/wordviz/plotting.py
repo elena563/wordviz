@@ -9,11 +9,12 @@ import plotly.graph_objects as go
 import seaborn as sns
 from sklearn.cluster import KMeans
 from scipy.stats import gaussian_kde
-from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+from scipy.cluster.hierarchy import linkage, dendrogram, fcluster, to_tree
 import warnings
 from .clustering import create_clusters
 from .dim_reduction import reduce_dim
 from .similarity import n_most_similar, compute_distances
+from .utils import compute_positions, draw_tree
 
 
 class BaseVisualizer:
@@ -619,26 +620,11 @@ class Visualizer(BaseVisualizer):
         return self.plot_interactive(red_method=red_method, grid=grid, theme=theme, title=title, use_subset=use_subset)
         
     
-    def plot_dendrogram(self, n_clusters=8, red_method='auto', use_subset=False):
+    def plot_dendrogram(self, label_fontsize=10, grid=False, use_subset=False, n: int = 500):
+    #(n_clusters=8 ):
         '''
-        Creates a 2D dendrogram of clustered embeddings using hierarchical clustering.
-        This first version of this function does not include title and theme parameters.
-
-        Parameters:
-        -----------
-        n_clusters : int, default=8
-            Number of clusters to generate.
-        red_method : str, default='auto'
-            Dimensionality reduction method for better interpretability ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
-        use_subset : bool, default=False
-            If True, uses the embedding subset instead of the full embeddings.
-
-        Returns:
-        --------
-        fig : matplotlib.figure.Figure
-        '''
-        raise NotImplementedError("This function is temporarely disabled due to requirements issues. It will be restored in a future package version :)")
-        '''reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
+        Creates a 2D circular dendrogram of clustered embeddings using hierarchical clustering.
+        This first version of this function does not include title and theme parameters. Adapted from Claude Sonnet 4.5 generation.
 
         Z = linkage(reduced_emb, method='complete')
         clusters = fcluster(Z, t=n_clusters, criterion='maxclust') 
@@ -655,4 +641,63 @@ class Visualizer(BaseVisualizer):
                 'labels': labels
             }},
             fontsize=6,            
-        )'''
+        )
+
+        Parameters:
+        -----------
+        n_clusters : int, default=8
+            Number of clusters to generate.
+        red_method : str, default='auto'
+            Dimensionality reduction method for better interpretability ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
+        use_subset : bool, default=False
+            If True, uses the embedding subset instead of the full embeddings.
+
+        Returns:
+        --------
+        fig : matplotlib.figure.Figure
+        '''
+        emb, tokens = self._set_embeddings(use_subset=use_subset, n=n)
+        Z = linkage(emb, method='complete')
+        tree = to_tree(Z, rd=False)
+        n_leaves = tree.count
+        
+        if tokens is None:
+            tokens = [f'Leaf {i}' for i in range(n_leaves)]
+        
+        leaf_angles = {}
+        leaf_counter = [0]
+        max_dist = tree.dist
+        node_positions = {}  # {node_id: (angle, radius)}
+
+        compute_positions(tree, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+
+        fig, ax = plt.subplots(figsize=(10,10), subplot_kw=dict(projection='polar'))
+
+        draw_tree(tree, ax, node_positions, line_color='black', linewidth=1.0)
+
+        label_distance = 1.05 
+        for leaf_id, angle in leaf_angles.items():
+            label_idx = list(leaf_angles.keys()).index(leaf_id)
+            ax.text(angle, label_distance, tokens[label_idx],
+                rotation=np.degrees(angle) - 90 if angle < np.pi else np.degrees(angle) + 90,
+                rotation_mode='anchor',
+                ha='left' if angle < np.pi else 'right',
+                va='center',
+                fontsize=label_fontsize,
+                zorder=2)
+        
+        ax.set_ylim(0, label_distance + 0.05)
+        ax.set_theta_zero_location('N')  # 0° in alto
+        ax.set_theta_direction(1)  # senso orario
+        
+        if not grid:
+            ax.set_yticks([])
+            ax.set_xticks([])
+            ax.spines['polar'].set_visible(False)
+            ax.grid(False)
+        else:
+            ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.close(fig)
+        return fig

@@ -1,19 +1,22 @@
-try:
-    import sentence_transformers
-    import transformers
-    import torch
-    ENCODING_AVAILABLE = True
-except ImportError as e:
-    ENCODING_AVAILABLE = False
-    _MISSING_DEPS = str(e)
+import importlib
+import subprocess
+import sys
 
-def _check_dependencies():
-    if not ENCODING_AVAILABLE:
-        raise ImportError(
-            "Encoding functionality requires additional dependencies.\n"
-            "Install with: poetry install -E encoding\n"
-            "Or: pip install wordviz[encoding]"
-        )
+def _check_dependencies(*packages: str, install_hint: str = None):
+    missing = [p for p in packages if importlib.util.find_spec(p) is None]
+    if not missing:
+        return
+    
+    print(f"Installing missing dependencies: {', '.join(missing)}...")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+    print("Installed dependencies.")
+
+_check_dependencies('sentence_transformers', 'transformers', 'torch')
+
+from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer, AutoModel
+import torch
+import numpy as np
 
 def encode_sentences(sentences, model='all-MiniLM-L6-v2', device='cpu'):
     """
@@ -47,9 +50,6 @@ def encode_sentences(sentences, model='all-MiniLM-L6-v2', device='cpu'):
         - 'dimensions' : int
             Embedding vector size.
     """
-    _check_dependencies()
-    
-    from sentence_transformers import SentenceTransformer
     
     st_model = SentenceTransformer(model, device=device)
     embeddings = st_model.encode(sentences, convert_to_numpy=True)
@@ -111,11 +111,6 @@ def encode_word_contexts(target_word: str, sentences: list, match: str ='exact',
         - 'dimensions' : int
             Embedding vector size.
     """
-    _check_dependencies()
-    
-    from transformers import AutoTokenizer, AutoModel
-    import torch
-    import numpy as np
     
     tokenizer = AutoTokenizer.from_pretrained(model)
     encoding_model = AutoModel.from_pretrained(model)
@@ -154,14 +149,3 @@ def encode_word_contexts(target_word: str, sentences: list, match: str ='exact',
         'model': model,
         'dimensions': embeddings.shape[1]
     }
-
-
-if not ENCODING_AVAILABLE:
-    def encode_sentences(*args, **kwargs):
-        _check_dependencies()
-    
-    def encode_word_contexts(*args, **kwargs): 
-        _check_dependencies()
-        
-    def list_available_models(*args, **kwargs):
-        _check_dependencies()

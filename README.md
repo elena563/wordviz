@@ -1,33 +1,30 @@
-![image](https://github.com/elena563/wordviz/blob/master/images/logo.png)
+![logo](images/logo.png)
 
 **WordViz** is a Python visualization library designed for exploring and visualizing word embeddings. Built on top of popular libraries such as `matplotlib`, `plotly`, and `gensim`, WordViz provides intuitive tools for analyzing embeddings through clustering, similarity exploration, and dimensionality reduction, all wrapped in interactive and customizable plots.
 With WordViz, users can gain insights into the structure of their word embeddings, making it a valuable tool for researchers and practitioners in natural language processing.
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.3.0
+version 0.3.1
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
 
-## Last Version Updates
-### Added
-- Support for contextual embeddings with two modes:
-  * `sentences`: visualize entire sentences
-  * `word_contexts`: visualize and compare multiple embeddings of the same word in different contexts
-- New `encoding` module to embed sentences and words in different contexts, supported by Transformers and PyTorch (optional requirements)
-- `load_contextual` method for `EmbeddingLoader` class
-- New `type` property for `EmbeddingLoader` class
+Built with:  
+  
+[![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![Plotly](https://img.shields.io/badge/Plotly-7A76FF?style=flat&logo=plotly&logoColor=white)]()
+[![matplotlib](https://img.shields.io/badge/matplotlib-15557C?style=flat)]()
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-f7931e?style=flat&logo=scikitlearn&logoColor=white)]()
+[![Gensim](https://img.shields.io/badge/Gensim-8199F7?style=flat)]()
+[![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white)]()
 
-### Deprecated
-- From `/plotting`:
-  * `interactive_embeddings` will change name to `plot_interactive` (FutureWarning added)
-  * `similarity_heatmap` will change name to `plot_similarity_heatmap` (FutureWarning added)
-- Warnings added for imminent property name changes in similarity module and `plot_similarity` (no breaking changes yet)
+## Last Version Updates
 
 ### Fixed
-- Fixed doubled parameter bug in MDS dimensionality reduction
-- Fixed support to pairwise distances for all distance types
+- Restored `plot_dendrogram` function.
+- Fixed automatic optional dependency installation for `encoding` module
+- Fixed other urgent bugs
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
