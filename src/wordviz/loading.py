@@ -37,6 +37,7 @@ class EmbeddingLoader:
         self.tokens = None         
         self.dimension = None
         self.type = None
+        self.classes = None
         self.embeddings_subset = None
         self.tokens_subset = None
 
@@ -205,7 +206,7 @@ class EmbeddingLoader:
         return self.embeddings
     
     
-    def load_contextual(self, embeddings, labels, embedding_type='sentence') -> np.ndarray:
+    def load_contextual(self, embeddings, labels, classes=None, embedding_type='sentence') -> np.ndarray:
         """
         Loads embeddings from contextual models.
         
@@ -217,6 +218,8 @@ class EmbeddingLoader:
             - List[List[float]] 
         labels: list of str
             labels corresponding to embedding 
+        classes: list of str, optional
+            Class labels for the embeddings
         embedding_type: str
             - 'sentence': Sentence/document/passage embeddings
             - 'word_context': Word embeddings in different contexts  
@@ -232,6 +235,7 @@ class EmbeddingLoader:
         
         self.embeddings = embeddings_array  
         self.tokens = labels
+        self.classes = classes
         self.dimension = embeddings_array.shape[1]
         self.type = embedding_type
         print("Contextual embedding loaded")

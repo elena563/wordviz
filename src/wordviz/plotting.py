@@ -445,7 +445,7 @@ class Visualizer(BaseVisualizer):
     
     def similarity_heatmap(self, dist: str = 'cosine', use_subset: bool = True, n: int = 500, theme: str = 'light1', title: bool = None):
         '''
-        DEPRECATED: This method will be renamed to `plot_interactive` in a future release.
+        DEPRECATED: This method will be renamed to `plot_similarity_heatmap` in a future release.
 
         Parameters
         -----------
@@ -465,7 +465,7 @@ class Visualizer(BaseVisualizer):
         fig : plotly.graph_objects.Figure
         '''
         warnings.warn(
-            "interactive_embeddings is deprecated and will be renamed to plot_interactive in a future release. "
+            "interactive_embeddings is deprecated and will be renamed to plot_similarity_heatmap in a future release. "
             "Please update your code accordingly.",
             FutureWarning
         )
@@ -539,7 +539,7 @@ class Visualizer(BaseVisualizer):
         return fig, ax
     
 
-    def plot_interactive(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
+    def plot_interactive(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False, color_by_class=False):
         '''
         Creates an interactive 2D scatterplot of embeddings using Plotly.
 
@@ -555,6 +555,8 @@ class Visualizer(BaseVisualizer):
             Title of the plot. If None, no title is shown.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
+        color_by_class : bool, default=False
+            If True, colors the points by their class labels (if available).
 
         Returns:
         --------
@@ -564,17 +566,38 @@ class Visualizer(BaseVisualizer):
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         style = self.get_theme(theme)
+        classes = self.loader.classes if color_by_class else None
 
-        fig = px.scatter(reduced_emb, reduced_emb[:, 0], reduced_emb[:, 1], color_discrete_sequence=[style['points']])
-        fig.update_traces(
-            text=tokens,
-            textposition='top center',
-            hovertemplate='%{text}<extra></extra>',
-            hoverlabel=dict(
-                bgcolor=style['bg'], 
-                font=dict(color=style['text'])),
-            marker=dict(size=6, opacity=0.6, line=dict(width=0))
-        )
+        if classes is not None:
+            unique = list(dict.fromkeys(classes))  
+            palette = sns.color_palette('tab10', n_colors=len(unique))
+            color_map = {label: f'rgb({int(r*255)},{int(g*255)},{int(b*255)})'
+                        for label, (r, g, b) in zip(unique, palette)}
+            
+            fig = go.Figure()
+            for label in unique:
+                mask = [i for i, c in enumerate(classes) if c == label]
+                fig.add_trace(go.Scatter(
+                    x=reduced_emb[mask, 0],
+                    y=reduced_emb[mask, 1],
+                    mode='markers',
+                    name=label,
+                    text=[tokens[i] for i in mask],
+                    hovertemplate='%{text}<extra></extra>',
+                    hoverlabel=dict(bgcolor=style['bg'], font=dict(color=style['text'])),
+                    marker=dict(size=6, opacity=0.6, color=color_map[label])
+                ))
+        else:
+            fig = px.scatter(reduced_emb, reduced_emb[:, 0], reduced_emb[:, 1], color_discrete_sequence=[style['points']])
+            fig.update_traces(
+                text=tokens,
+                textposition='top center',
+                hovertemplate='%{text}<extra></extra>',
+                hoverlabel=dict(
+                    bgcolor=style['bg'], 
+                    font=dict(color=style['text'])),
+                marker=dict(size=6, opacity=0.6, line=dict(width=0))
+            )
         fig.update_layout(
             height=500,
             title=title if title else "Word Embedding Interactive Plot",

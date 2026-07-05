@@ -1,4 +1,9 @@
-## [0.3.1] - /10/2025
+## [0.3.2] - 05/07/2026
+### Added
+- New `classes` property for `EmbeddingLoader` class, allowing access to class labels of embeddings (if available)
+- New `color_by_class` parameter for `plot_interactive` method in `Visualizer` class, allowing coloring of points by their class labels (if available)
+
+## [0.3.1] - 04/06/2026
 ### Fixed
 - Restored `plot_dendrogram` function, adapted from radialtree function belonging to https://github.com/koonimaru/omniplot by koonimaru (MIT License)
 - Fixed automatic optional dependency installation for `encoding` module

@@ -5,7 +5,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.3.1
+version 0.3.2
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
@@ -21,10 +21,9 @@ Built with:
 
 ## Last Version Updates
 
-### Fixed
-- Restored `plot_dendrogram` function.
-- Fixed automatic optional dependency installation for `encoding` module
-- Fixed other urgent bugs
+### Added
+- New `classes` property for `EmbeddingLoader` class, allowing access to class labels of embeddings (if available)
+- New `color_by_class` parameter for `plot_interactive` method in `Visualizer` class, allowing coloring of points by their class labels (if available)
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
