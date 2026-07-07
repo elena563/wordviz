@@ -9,6 +9,8 @@ import zipfile
 from pathlib import Path
 import urllib.request
 
+import logging
+logger = logging.getLogger(__name__)
 
 class EmbeddingLoader:
     """
@@ -59,25 +61,23 @@ class EmbeddingLoader:
         '''checks if path argument leads to a valid file name and returns if it is binary'''
         valid_ext = ['.bin', '.txt', '.vec']
 
-        if not isinstance(path, str):
-            path = str(path)    
-        _, ext = os.path.splitext(path.lower())
-
         if path is None:
             raise ValueError('File path is required')
+        if not isinstance(path, (str, os.PathLike)):
+            raise TypeError('The file path must be a string')    
+
+        path = Path(path)
         
-        if not isinstance(path, str):
-            raise TypeError('The file path must be a string')
-        
-        if not os.path.exists(path):
+        if not path.exists():
             raise FileNotFoundError(f"Invalid file path {path}: the file does not exist")
-    
+
+        ext = path.suffix.lower()
+        if ext == '.gz' or ext == '.zip':
+            raise ValueError(f'Compressed files are not supported. Please extract the file first.')
         if ext not in valid_ext:
             raise ValueError(f'Invalid file extension {ext}. Valid extensions are: {','.join(valid_ext)}')
 
-        binary = True if ext == '.bin' else False
-
-        return binary
+        return ext == '.bin'
 
 
     def load_from_file(self, path: str, format: str) -> np.ndarray:
@@ -115,11 +115,14 @@ class EmbeddingLoader:
                 else:
                     self.embeddings_raw = KeyedVectors.load_word2vec_format(path, binary=False)
             case 'glove':
-                glove2word2vec(path, "glove_w2v.txt")
-                if not os.path.exists("glove_w2v.txt"):
-                    raise RuntimeError("GloVe to Word2Vec conversion failed.")
+                cache_dir = self.get_cache_dir() 
+                glove_path = cache_dir / "glove_w2v.txt"
+                try:
+                    glove2word2vec(path, str(glove_path))
+                except Exception as e:
+                    raise RuntimeError(f"GloVe to Word2Vec conversion failed: {e}")
                 
-                self.embeddings_raw = KeyedVectors.load_word2vec_format("glove_w2v.txt")
+                self.embeddings_raw = KeyedVectors.load_word2vec_format(str(glove_path), binary=False)
 
         self.tokens = list(self.embeddings_raw.index_to_key)
         self.dimension = self.embeddings_raw.vector_size
@@ -127,7 +130,7 @@ class EmbeddingLoader:
 
         words = self.embeddings_raw.index_to_key
         self.embeddings = np.array([self.embeddings_raw.get_vector(word) for word in words])
-        print("Embedding loaded from file")
+        logger.info("Embedding loaded from file")
 
         return self.embeddings
     
@@ -136,10 +139,10 @@ class EmbeddingLoader:
         '''downloads zip file from url'''
         zip_path = self.get_cache_dir() / filename
         if not zip_path.exists():
-            print(f"Downloading {filename}...")
+            logger.info(f"Downloading {filename}...")
             urllib.request.urlretrieve(url, zip_path)
         else:
-            print(f"{filename} already exists in cache.")
+            logger.info(f"{filename} already exists in cache.")
         return zip_path
     
 
@@ -149,7 +152,7 @@ class EmbeddingLoader:
         filename = os.path.basename(source_path)
         dest_path = os.path.join(dest_folder, filename)
         shutil.copy(source_path, dest_path)
-        print(f"File saved in {dest_path}.")
+        logger.info(f"File saved in {dest_path}.")
 
 
     def load_pretrained(self, model: str, lang: str, source: str, dimension: str, save_file: bool = False, export_dir: str = None) -> np.ndarray:
@@ -198,7 +201,7 @@ class EmbeddingLoader:
 
         if not file_path.exists():
             with zipfile.ZipFile(zip_path, 'r') as z:
-                print(f"Extracting {filename}...")
+                logger.info(f"Extracting {filename}...")
                 z.extract(filename, path=dest_dir)
 
         self.embeddings = self.load_from_file(file_path, model)
@@ -243,7 +246,7 @@ class EmbeddingLoader:
         self.classes = classes
         self.dimension = embeddings_array.shape[1]
         self.type = embedding_type
-        print("Contextual embedding loaded")
+        logger.info("Contextual embedding loaded")
         
         return self.embeddings
 
@@ -327,7 +330,7 @@ class EmbeddingLoader:
         emb_size = self.embeddings.shape[0]
         
         if n > emb_size:
-            print('n is larger than the embedding size, the subset size will be equal to the full size')
+            logger.info('n is larger than the embedding size, the subset size will be equal to the full size')
 
         if strategy == 'first':
             indices = list(range(min(n, emb_size)))

@@ -4,6 +4,10 @@
 ### Fixed
 - `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
 - Added `_require_loaded()` guard method with `ValueError` on uninitialized embeddings/tokens; applied to `get_embedding()` and `subset()`
+- `_validate_file()`: fixed guard order, removed inconsistent type coercion, added explicit error for compressed files (.gz, .zip)
+- `load_from_file()`: GloVe conversion temp file written to cache dir instead of cwd
+- removed unnecessary dev dependencies
+- substituted `print()` statements with `logging` for better logging practices
 
 ## [0.3.2] - 05/07/2026
 ### Added

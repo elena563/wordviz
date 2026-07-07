@@ -2,14 +2,17 @@ import importlib
 import subprocess
 import sys
 
+import logging
+logger = logging.getLogger(__name__)
+
 def _check_dependencies(*packages: str, install_hint: str = None):
     missing = [p for p in packages if importlib.util.find_spec(p) is None]
     if not missing:
         return
     
-    print(f"Installing missing dependencies: {', '.join(missing)}...")
+    logger.info(f"Installing missing dependencies: {', '.join(missing)}...")
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
-    print("Installed dependencies.")
+    logger.info("Installed dependencies.")
 
 _check_dependencies('sentence_transformers', 'transformers', 'torch')
 
