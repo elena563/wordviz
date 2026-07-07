@@ -1,3 +1,10 @@
+# Changelog
+
+## [Unreleased]
+### Fixed
+- `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
+- Added `_require_loaded()` guard method with `ValueError` on uninitialized embeddings/tokens; applied to `get_embedding()` and `subset()`
+
 ## [0.3.2] - 05/07/2026
 ### Added
 - New `classes` property for `EmbeddingLoader` class, allowing access to class labels of embeddings (if available)

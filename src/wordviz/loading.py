@@ -48,7 +48,12 @@ class EmbeddingLoader:
         cache_dir = Path.home() / ".wordviz_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir   
-
+    
+    def _require_loaded(self, check_tokens=False):
+        if self.embeddings is None:
+            raise ValueError("No embeddings loaded. Call load_from_file() or load_contextual() first.")
+        if check_tokens and self.tokens is None:
+            raise ValueError("No tokens loaded. Call load_from_file() or load_contextual() first.")
 
     def _validate_file(self, path):
         '''checks if path argument leads to a valid file name and returns if it is binary'''
@@ -270,8 +275,8 @@ class EmbeddingLoader:
     
     def get_embedding(self, token):
         '''returns corresponding embeddings using KeyedVectors object for a string given by the user'''
-        if self.embeddings is None:
-            raise RuntimeError("No embeddings loaded.")
+        self._require_loaded()
+        
         if self.type in ("sentence", "word_context"):
             try:
                 index = self.tokens.index(token)
@@ -317,17 +322,18 @@ class EmbeddingLoader:
         self.embeddings_subset : np.ndarray
             Corresponding selected embedding vectors.
         '''
-        if self.embeddings is None or self.tokens is None:
-            raise RuntimeError("No embeddings loaded. Call load_from_file / load_contextual first.")
+        self._require_loaded(check_tokens=True)
         
-        if n > len(self.tokens):
+        emb_size = self.embeddings.shape[0]
+        
+        if n > emb_size:
             print('n is larger than the embedding size, the subset size will be equal to the full size')
 
         if strategy == 'first':
-            indices = list(range(min(n, len(self.tokens))))
+            indices = list(range(min(n, emb_size)))
         elif strategy == 'random':
             rng = np.random.default_rng(random_seed)
-            indices = rng.choice(len(self.tokens), size=min(n, len(self.tokens)), replace=False).tolist()
+            indices = rng.choice(emb_size, size=min(n, emb_size), replace=False).tolist()
         else:
             raise ValueError("strategy has to be 'first' o 'random'")
         
