@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.3] - 07/07/2026
 ### Fixed
 - `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
 - Added `_require_loaded()` guard method with `ValueError` on uninitialized embeddings/tokens; applied to `get_embedding()` and `subset()`

@@ -5,7 +5,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.3.2
+version 0.3.3
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
@@ -21,9 +21,13 @@ Built with:
 
 ## Last Version Updates
 
-### Added
-- New `classes` property for `EmbeddingLoader` class, allowing access to class labels of embeddings (if available)
-- New `color_by_class` parameter for `plot_interactive` method in `Visualizer` class, allowing coloring of points by their class labels (if available)
+### Fixed
+- `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
+- Added `_require_loaded()` guard method with `ValueError` on uninitialized embeddings/tokens; applied to `get_embedding()` and `subset()`
+- `_validate_file()`: fixed guard order, removed inconsistent type coercion, added explicit error for compressed files (.gz, .zip)
+- `load_from_file()`: GloVe conversion temp file written to cache dir instead of cwd
+- removed unnecessary dev dependencies
+- substituted `print()` statements with `logging` for better logging practices
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
