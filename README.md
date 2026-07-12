@@ -5,7 +5,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.3.4
+**version 0.3.5**
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/

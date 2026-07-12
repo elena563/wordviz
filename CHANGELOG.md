@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.5] - 12/07/2026
+### Fixed
+- Updated scipy lower bound to >=1.14.1 to ensure prebuilt wheels on Python 3.13
+
 ## [0.3.4] - 12/07/2026
 ### Added
 - Added support for Python 3.13 and CI pipeline for dependencies check
