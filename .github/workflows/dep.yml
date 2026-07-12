@@ -1,6 +1,14 @@
 name: Check dependencies
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'pyproject.toml'
+      - 'requirements*.txt'
+  pull_request:
+    paths:
+      - 'pyproject.toml'
+      - 'requirements*.txt'
 
 jobs:
   test:

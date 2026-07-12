@@ -265,7 +265,7 @@ class EmbeddingLoader:
         else:
             try:
                 return np.array(embeddings, dtype=np.float32)
-            except:
+            except Exception:
                 raise ValueError(f"Cannot convert embeddings of type {type(embeddings)} to numpy array")
 
 
@@ -291,7 +291,7 @@ class EmbeddingLoader:
             if getattr(self, "embeddings_raw", None) is not None:
                 try:
                     return self.embeddings_raw.get_vector(token)
-                except Exception:
+                except KeyError:
                     pass
             try:
                 idx = self.tokens.index(token)

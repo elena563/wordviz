@@ -5,7 +5,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-version 0.3.3
+version 0.3.4
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
@@ -21,13 +21,8 @@ Built with:
 
 ## Last Version Updates
 
-### Fixed
-- `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
-- Added `_require_loaded()` guard method with `ValueError` on uninitialized embeddings/tokens; applied to `get_embedding()` and `subset()`
-- `_validate_file()`: fixed guard order, removed inconsistent type coercion, added explicit error for compressed files (.gz, .zip)
-- `load_from_file()`: GloVe conversion temp file written to cache dir instead of cwd
-- removed unnecessary dev dependencies
-- substituted `print()` statements with `logging` for better logging practices
+### Added
+- Added support for Python 3.13 and CI pipeline for dependencies check
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
@@ -53,17 +48,15 @@ pip install wordviz
 
 ### Notes: Python version compatibility
 
-Currently, wordviz is not compatible with Python 3.13, due to limitations of some key dependencies:
+This is the very first version of wordviz that supports Python 3.13.
 
-gensim, one of the core libraries used by wordviz, does not yet provide official support or precompiled wheels for Python 3.13.
-
-For proper installation installation, we recommend that you create a virtual environment with Python 3.12, or just use uv:
+If you still have problems with the installation, it is recommended to use Python 3.12.
 
 ```bash
 uv init --python 3.12
 ```
 
-The package will be updated as soon as the dependencies are compatible with Python 3.13.
+This warning will be removed in the next versions of wordviz, as Python 3.13 will be fully supported.
 
 
 ## Usage

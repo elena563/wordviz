@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.4] - 12/07/2026
+### Added
+- Added support for Python 3.13 and CI pipeline for dependencies check
+
 ## [0.3.3] - 07/07/2026
 ### Fixed
 - `subset()`: replaced `len(self.tokens)` with `self.embeddings.shape[0]` as authoritative size source
