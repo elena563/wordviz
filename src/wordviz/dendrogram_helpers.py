@@ -1,20 +1,20 @@
 import numpy as np
+from scipy.cluster.hierarchy import ClusterNode
 
-def compute_positions(node, leaf_counter, n_leaves, max_dist, 
-                      leaf_angles, node_positions):
+def compute_positions(node: ClusterNode, leaf_counter: list[int], n_leaves: int, max_dist: float, leaf_angles: dict[int, float], node_positions: dict[int, tuple[float, float]]):
     """
     Recursively computes the angular and radial positions of each node in the dendrogram.
-    Returns: (angolo_centrale, lista_foglie_discendenti)
+    Updates leaf_angles and node_positions dictionaries with the computed values.
     """
     if node.is_leaf():
         angle = 2 * np.pi * leaf_counter[0] / n_leaves
         leaf_counter[0] += 1
         leaf_angles[node.id] = angle
         node_positions[node.id] = (angle, 1.0)
-        return angle, [node.id]
+        return [node.id]
     else:
-        left_angle, left_leaves = compute_positions(node.left, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
-        right_angle, right_leaves = compute_positions(node.right, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+        left_leaves = compute_positions(node.left, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+        right_leaves = compute_positions(node.right, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
 
         all_leaves = left_leaves + right_leaves
         angles = [leaf_angles[lid] for lid in all_leaves]
@@ -32,10 +32,9 @@ def compute_positions(node, leaf_counter, n_leaves, max_dist,
         else:
             mean_angle = np.mean(angles)
         
-        # radius is inversely proportional to distance from root
-        radius = 1.0 - (node.dist / max_dist if max_dist > 0 else 0)
+        radius = 1.0 - (node.dist / max_dist if max_dist > 0 else 0) # radius is inversely proportional to distance from root
         node_positions[node.id] = (mean_angle, radius)
-        return mean_angle, all_leaves
+        return all_leaves
     
 
 def draw_tree(node, ax, node_positions, line_color='black', linewidth=1.0):
