@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.6] - 17/07/2026
+### Updated
+- Improved `plot_dendrogram` function with some modifications, as like as the other radialtree functions (`calculate_positions` and `draw_tree`), added tests for these.
+
 ## [0.3.5] - 12/07/2026
 ### Fixed
 - Updated scipy lower bound to >=1.14.1 to ensure prebuilt wheels on Python 3.13

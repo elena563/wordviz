@@ -5,7 +5,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.3.5**
+**version 0.3.6**
 
 PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
@@ -21,8 +21,8 @@ Built with:
 
 ## Last Version Updates
 
-### Added
-- Added support for Python 3.13 and CI pipeline for dependencies check
+### Updated
+- Improved `plot_dendrogram` function with some modifications, as like as the other radialtree functions (`calculate_positions` and `draw_tree`), added tests for these.
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
@@ -48,7 +48,7 @@ pip install wordviz
 
 ### Notes: Python version compatibility
 
-This is the very first version of wordviz that supports Python 3.13.
+The only versions that support Python 3.13 are the latest releases starting from version 0.3.5.
 
 If you still have problems with the installation, it is recommended to use Python 3.12.
 
@@ -100,4 +100,4 @@ This project is licensed under the MIT License.
 
 ## Contacts
 
-Elena Zen - [My Portfolio Website](https://elenazen.it) - info.elenazen@gmail.com
+Elena Zen - [My Portfolio Website](https://elenazen.it/en) - info.elenazen@gmail.com
