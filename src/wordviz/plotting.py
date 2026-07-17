@@ -14,7 +14,7 @@ import warnings
 from .clustering import create_clusters
 from .dim_reduction import reduce_dim
 from .similarity import n_most_similar, compute_distances
-from .utils import compute_positions, draw_tree
+from .dendrogram_helpers import compute_positions, draw_tree
 
 
 class BaseVisualizer:
@@ -643,44 +643,39 @@ class Visualizer(BaseVisualizer):
         return self.plot_interactive(red_method=red_method, grid=grid, theme=theme, title=title, use_subset=use_subset)
         
     
-    def plot_dendrogram(self, label_fontsize=10, grid=False, use_subset=False, n: int = 500):
-    #(n_clusters=8 ):
+    def plot_dendrogram(self, method: str = 'complete', label_fontsize: int = 10, grid: bool = False, title: str = None, use_subset: bool = False, n: int = 100, n_clusters: int = None, theme: str = 'light1'):
         '''
         Creates a 2D circular dendrogram of clustered embeddings using hierarchical clustering.
-        This first version of this function does not include title and theme parameters. Adapted from Claude Sonnet 4.5 generation.
-
-        Z = linkage(reduced_emb, method='complete')
-        clusters = fcluster(Z, t=n_clusters, criterion='maxclust') 
-        clusters_colors, legend_labels = self.map_colors(clusters)
-
-        Z2 = dendrogram(Z, labels=tokens, no_plot=True)
-        labels  = [v[1] for v in legend_labels.values()] 
-
-        rt.plot(
-            Z2,
-            colorlabels={'cluster': clusters_colors},  
-            colorlabels_legend={'cluster': {            
-                'colors': clusters_colors,
-                'labels': labels
-            }},
-            fontsize=6,            
-        )
+        This first version of this function does not include title and theme parameters.
 
         Parameters:
         -----------
-        n_clusters : int, default=8
-            Number of clusters to generate.
-        red_method : str, default='auto'
-            Dimensionality reduction method for better interpretability ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
+        method : str, default='complete'
+            Linkage method for hierarchical clustering ('ward', 'complete', 'average', etc.).
+        title : str, optional
+            Title of the plot. If None, default title is shown.
+        label_fontsize : int, default=10   
+            Font size for the labels of the leaves in the dendrogram.
+        grid : bool, default=False
+            Whether to display grid lines.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
+        n : int, default=100
+            Number of embeddings to subset. Ignored if a subset already exists and use_subset is True
+        n_clusters : int, optional
+            Number of clusters to generate. If None, no cluster coloring is applied.
+        theme : str, default='light1'
+            Cluster color theme.
 
         Returns:
         --------
         fig : matplotlib.figure.Figure
+        ax : matplotlib.axes.Axes
         '''
+        label_distance = 1.05
+
         emb, tokens = self._set_embeddings(use_subset=use_subset, n=n)
-        Z = linkage(emb, method='complete')
+        Z = linkage(emb, method=method)
         tree = to_tree(Z, rd=False)
         n_leaves = tree.count
         
@@ -691,17 +686,27 @@ class Visualizer(BaseVisualizer):
         leaf_counter = [0]
         max_dist = tree.dist
         node_positions = {}  # {node_id: (angle, radius)}
+        leaf_order = {}
 
-        compute_positions(tree, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions)
+        compute_positions(tree, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions, leaf_order)
 
         fig, ax = plt.subplots(figsize=(10,10), subplot_kw=dict(projection='polar'))
 
+        cluster_colors = None
+        if n_clusters is not None:
+            labels = fcluster(Z, t=n_clusters, criterion='maxclust')
+            cluster_colors = self.map_colors(labels, theme=theme)  # TODO: map colors is to update
+            cut_distance = Z[-(n_clusters-1), 2]
+            threshold_radius = 1.0 - (cut_distance / max_dist)
+
         draw_tree(tree, ax, node_positions, line_color='black', linewidth=1.0)
 
-        label_distance = 1.05 
+        if n_clusters is not None:
+            ax.plot(np.linspace(0, 2*np.pi, 100), [threshold_radius]*100,
+                    color='red', linewidth=1.0, linestyle='--', zorder=1)
+ 
         for leaf_id, angle in leaf_angles.items():
-            label_idx = list(leaf_angles.keys()).index(leaf_id)
-            ax.text(angle, label_distance, tokens[label_idx],
+            ax.text(angle, label_distance, tokens[leaf_order[leaf_id]],
                 rotation=np.degrees(angle) - 90 if angle < np.pi else np.degrees(angle) + 90,
                 rotation_mode='anchor',
                 ha='left' if angle < np.pi else 'right',
@@ -709,18 +714,20 @@ class Visualizer(BaseVisualizer):
                 fontsize=label_fontsize,
                 zorder=2)
         
+        ax.set_title(title or f'Word Embedding Dendrogram', fontsize=12, fontweight='bold')
         ax.set_ylim(0, label_distance + 0.05)
         ax.set_theta_zero_location('N')  # 0° in alto
         ax.set_theta_direction(1)  # senso orario
         
+        ax.spines['polar'].set_visible(False)
         if not grid:
             ax.set_yticks([])
             ax.set_xticks([])
-            ax.spines['polar'].set_visible(False)
             ax.grid(False)
         else:
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
             ax.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.close(fig)
-        return fig
+        return fig, ax

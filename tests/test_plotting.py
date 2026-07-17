@@ -71,3 +71,8 @@ def test_similarity_heatmap(vis, dist):
 def test_interactive_embeddings(vis, red_method):
     fig = vis.interactive_embeddings(red_method=red_method)
     assert fig is not None
+
+def test_plot_dendrogram(vis):
+    fig, ax = vis.plot_dendrogram()
+    assert fig is not None
+    assert ax is not None
