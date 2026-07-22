@@ -1,4 +1,5 @@
-import umap
+from wordviz._optional import require
+
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -59,6 +60,8 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
         case 'tsne':    
             reducer = TSNE(n_components=n_dimensions, **params)
         case 'umap':
+            require('viz')
+            import umap
             reducer = umap.UMAP(n_components=n_dimensions, **params)
         case 'isomap': 
             reducer = Isomap(n_components=n_dimensions, **params)
