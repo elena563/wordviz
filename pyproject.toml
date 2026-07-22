@@ -6,6 +6,11 @@ authors = ["Elena Zen <elenazen563@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
+include = [
+    "images",
+    "docs/example.ipynb",
+]
+
 [project]
 name = "wordviz"
 version = "0.4.0"
@@ -36,11 +41,6 @@ pytest = "^8.3.5"
 black = "^25.1.0"
 isort = "^6.0.1"
 sphinx = "^8.2.3"
-
-include = [
-    "images",
-    "docs/example.ipynb",
-]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
