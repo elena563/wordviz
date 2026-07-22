@@ -1,46 +1,31 @@
 import matplotlib
 matplotlib.use("Agg")
-from wordviz.loading import EmbeddingLoader
-from wordviz.plotting import Visualizer
-import numpy as np
-import os
+from matplotlib import pyplot as plt
+import plotly.graph_objects as go
 import pytest
-'''
-@pytest.fixture(scope='module')
-def vis():
-    loader = EmbeddingLoader()
-    # let pytest find file
-    file_path = os.path.join(os.path.dirname(__file__), 'embedding_100words.txt')
-    loader.load_from_file(file_path, 'word2vec')
-    return Visualizer(loader)
-'''
 
-@pytest.fixture(scope='module') 
-def vis():
-    cloader = EmbeddingLoader()
-    
-    np.random.seed(42)  
-    fake_embeddings = np.random.randn(50, 384)
-    fake_labels = [f"This is test sentence number {i}." for i in range(50)]
-    
-    cloader.load_contextual(
-        fake_embeddings, 
-        fake_labels,
-        'sentence'
-    )
-    return Visualizer(cloader)
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_embeddings(vis, red_method):
     fig, ax = vis.plot_embeddings(red_method=red_method)
-    assert fig is not None
-    assert ax is not None
+    assert 'pca' in vis.reduced
+    assert vis.reduced['pca'].shape[1] == 2
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
+
+def test_plot_cache_reuse(vis, mocker):
+    vis.plot_embeddings(red_method='pca')
+    cached = vis.reduced.get('pca')
+    assert cached is not None
+    
+    vis.plot_embeddings(red_method='pca')
+    assert vis.reduced.get('pca') is cached
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_clusters(vis, red_method):
     fig, ax = vis.plot_clusters(red_method=red_method)
-    assert fig is not None
-    assert ax is not None
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
 
 @pytest.fixture
 def target(vis):
@@ -52,27 +37,27 @@ def target(vis):
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_similarity(vis, target, dist, red_method):
     fig, ax = vis.plot_similarity(target, dist=dist, n=10, red_method=red_method)
-    assert fig is not None
-    assert ax is not None
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_topography(vis, red_method):
     fig = vis.plot_topography(red_method=red_method)
-    assert fig is not None
+    assert isinstance(fig, go.Figure)
 
 @pytest.mark.parametrize("dist", [
     "cosine", "euclidean", "manhattan", "chebyshev", "dot", "pearson", "spearman"
 ])
-def test_similarity_heatmap(vis, dist):
-    fig = vis.similarity_heatmap(dist=dist)
-    assert fig is not None
+def test_plot_similarity_heatmap(vis, dist):
+    fig = vis.plot_similarity_heatmap(dist=dist)
+    assert isinstance(fig, go.Figure)
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_interactive_embeddings(vis, red_method):
-    fig = vis.interactive_embeddings(red_method=red_method)
-    assert fig is not None
+def test_plot_interactive(vis, red_method):
+    fig = vis.plot_interactive(red_method=red_method)
+    assert isinstance(fig, go.Figure)
 
 def test_plot_dendrogram(vis):
     fig, ax = vis.plot_dendrogram()
-    assert fig is not None
-    assert ax is not None
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
