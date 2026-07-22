@@ -14,7 +14,7 @@ from .similarity import n_most_similar
 class Visualizer3D(BaseVisualizer):
     def __init__(self, loader):
         super().__init__(loader) 
-        self.reduced = None
+        self.reduced: dict[str, np.ndarray] = {}
         self.reduced_subset = None
 
     def _setup_3d(self, reduced_emb, theme, grid, tokens, title, def_title, labels=None):
@@ -85,7 +85,7 @@ class Visualizer3D(BaseVisualizer):
 
         Parameters
         -----------
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             If True, displays a background grid on the plot.
@@ -127,7 +127,7 @@ class Visualizer3D(BaseVisualizer):
 
         Parameters:
         -----------
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             Whether to display grid lines.
@@ -169,7 +169,7 @@ class Visualizer3D(BaseVisualizer):
             Distance metric to use when computing word similarity.
         n : int, default=10
             Number of similar words to display.
-        red_method : str, default='pca'
+        red_method : str, default='pca' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.).
         grid : bool, default=True
             If True, displays a background grid on the plot.
@@ -225,7 +225,7 @@ class Visualizer3D(BaseVisualizer):
             Number of clusters to generate.
         method : str, default='kmeans'
             Clustering method to use ('kmeans' or others supported by create_clusters).
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         show_centers : bool, default=False
             If True, displays cluster centers on the plot.

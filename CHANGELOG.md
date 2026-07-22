@@ -1,4 +1,7 @@
 # Changelog
+## [0.4.0] - Unreleased
+- Changed Visualizers attribute `reduced` type to dict instead of a single numpy array, to allow for multiple reduced embeddings to be stored and accessed by their reduction method name.
+- Changed default value of `red_method` parameter in plotting functions to 'pca' instead of 'auto', as 'auto' is no more useful, so it is deprecated and will be removed in future releases (FutureWarning added).
 
 ## [0.3.6] - 17/07/2026
 ### Updated

@@ -18,6 +18,8 @@ from .dendrogram_helpers import compute_positions, draw_tree
 
 
 class BaseVisualizer:
+    reduced: dict[str, np.ndarray]
+
     def __init__(self, loader):
         self.loader = loader
         self.tokens = loader.tokens
@@ -48,22 +50,24 @@ class BaseVisualizer:
             else:
                 emb, tokens = self.loader.use_subset()
 
-            cache_attr = 'reduced_subset'
         else:
             emb = self.embeddings
             tokens = self.tokens
-            cache_attr = 'reduced'
 
         if red_method is not None:
             if red_method == 'auto':
-                reduced = getattr(self, cache_attr, None)
+                warnings.warn(
+                    "'auto' is deprecated and will be removed in future versions. "
+                    "Please use reduction method name directly - one caching instance is now available for each method.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                red_method = 'pca'
 
-                if reduced is None:
-                    reduced = reduce_dim(emb, method='pca', n_dimensions=dims)
-                    setattr(self, cache_attr, reduced)
-            else:
+            reduced = self.reduced.get(red_method)
+            if reduced is None:
                 reduced = reduce_dim(emb, method=red_method, n_dimensions=dims)
-                setattr(self, cache_attr, reduced)
+                self.reduced[red_method] = reduced
 
             return reduced, tokens
         
@@ -139,7 +143,7 @@ class BaseVisualizer:
 class Visualizer(BaseVisualizer):
     def __init__(self, loader):
         super().__init__(loader) 
-        self.reduced = None
+        self.reduced: dict[str, np.ndarray] = {}
         self.reduced_subset = None
 
 
@@ -149,7 +153,7 @@ class Visualizer(BaseVisualizer):
 
         Parameters
         -----------
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             If True, displays a background grid on the plot.
@@ -252,7 +256,7 @@ class Visualizer(BaseVisualizer):
 
         Parameters
         -----------
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         use_subset : bool, default=True
             If True, uses a subset of the embeddings for visualization. This is recommended in this plot for larger embeddings.
@@ -484,7 +488,7 @@ class Visualizer(BaseVisualizer):
             Number of clusters to generate.
         method : str, default='kmeans'
             Clustering method to use ('kmeans' or others supported by create_clusters).
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         show_centers : bool, default=False
             If True, displays cluster centers on the plot.
@@ -545,7 +549,7 @@ class Visualizer(BaseVisualizer):
 
         Parameters:
         -----------
-        red_method : str, default='auto'
+        red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         grid : bool, default=True
             Whether to display grid lines.
