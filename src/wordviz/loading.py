@@ -46,18 +46,18 @@ class EmbeddingLoader:
         with open(os.path.join(os.path.dirname(__file__), 'pretrained_embeddings.json')) as f:
             self.available_pretrained = json.load(f)
             
-    def get_cache_dir(self):
+    def get_cache_dir(self) -> Path:
         cache_dir = Path.home() / ".wordviz_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir   
     
-    def _require_loaded(self, check_tokens=False):
+    def _require_loaded(self, check_tokens=False) -> None:
         if self.embeddings is None:
             raise ValueError("No embeddings loaded. Call load_from_file() or load_contextual() first.")
         if check_tokens and self.tokens is None:
             raise ValueError("No tokens loaded. Call load_from_file() or load_contextual() first.")
 
-    def _validate_file(self, path):
+    def _validate_file(self, path: str) -> bool:
         '''checks if path argument leads to a valid file name and returns if it is binary'''
         valid_ext = ['.bin', '.txt', '.vec']
 
@@ -75,7 +75,7 @@ class EmbeddingLoader:
         if ext == '.gz' or ext == '.zip':
             raise ValueError(f'Compressed files are not supported. Please extract the file first.')
         if ext not in valid_ext:
-            raise ValueError(f'Invalid file extension {ext}. Valid extensions are: {','.join(valid_ext)}')
+            raise ValueError(f"Invalid file extension {ext}. Valid extensions are: {','.join(valid_ext)}")
 
         return ext == '.bin'
 
@@ -135,7 +135,7 @@ class EmbeddingLoader:
         return self.embeddings
     
 
-    def download_zip(self, url, filename):
+    def download_zip(self, url: str, filename: str) -> Path:
         '''downloads zip file from url'''
         zip_path = self.get_cache_dir() / filename
         if not zip_path.exists():
@@ -214,7 +214,7 @@ class EmbeddingLoader:
         return self.embeddings
     
     
-    def load_contextual(self, embeddings, labels, classes=None, embedding_type='sentence') -> np.ndarray:
+    def load_contextual(self, embeddings, labels: list, classes: list = None, embedding_type: str = 'sentence') -> np.ndarray:
         """
         Loads embeddings from contextual models.
         
@@ -250,7 +250,7 @@ class EmbeddingLoader:
         
         return self.embeddings
 
-    def _normalize_embeddings(self, embeddings):
+    def _normalize_embeddings(self, embeddings) -> np.ndarray:
         """Converts embeddings to numpy array."""
 
         if isinstance(embeddings, np.ndarray):
@@ -269,14 +269,14 @@ class EmbeddingLoader:
                 raise ValueError(f"Cannot convert embeddings of type {type(embeddings)} to numpy array")
 
 
-    def list_available_pretrained(self):
+    def list_available_pretrained(self) -> None:
         '''prints a list of pretrained embeddings provided by the package'''
         print('model | lang | source | dim')
         for file in self.available_pretrained['data']:
             print(" | ".join(x for x in file[:-2]))
 
     
-    def get_embedding(self, token):
+    def get_embedding(self, token: str) -> np.ndarray:
         '''returns corresponding embeddings using KeyedVectors object for a string given by the user'''
         self._require_loaded()
         
@@ -302,7 +302,7 @@ class EmbeddingLoader:
             raise RuntimeError("Unknown embedding type")
             
 
-    def subset(self, n: int = 1000, strategy: str = 'first', random_seed: int = None):
+    def subset(self, n: int = 1000, strategy: str = 'first', random_seed: int = None) -> None:
         '''
         Create a subset of the current embeddings and tokens. Useful for speeding up visualizations or 
         managing memory with large embedding spaces.
@@ -344,7 +344,7 @@ class EmbeddingLoader:
         self.embeddings_subset = self.embeddings[indices]
 
 
-    def use_subset(self, n: int = 1000):
+    def use_subset(self, n: int = 1000) -> tuple[list[str], np.ndarray]:
         '''returns embedding subset. If None, creates 1000 words subset and returns it.'''
 
         if self.embeddings_subset is None:
