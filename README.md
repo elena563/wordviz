@@ -1,3 +1,7 @@
+[![PyPI version](https://img.shields.io/pypi/v/wordviz.svg)](https://pypi.org/project/wordviz/)
+[![Python](https://img.shields.io/pypi/pyversions/wordviz.svg)](https://pypi.org/project/wordviz/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ![logo](images/logo.png)
 
 **WordViz** is a Python visualization library designed for exploring and visualizing word embeddings. Built on top of popular libraries such as `matplotlib`, `plotly`, and `gensim`, WordViz provides intuitive tools for analyzing embeddings through clustering, similarity exploration, and dimensionality reduction, all wrapped in interactive and customizable plots.
@@ -5,9 +9,8 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.3.6**
+**version 0.4.0**
 
-PyPi Page: https://pypi.org/project/wordviz/  
 Documentation: https://wordviz.readthedocs.io/
 
 Built with:  
@@ -22,7 +25,14 @@ Built with:
 ## Last Version Updates
 
 ### Updated
-- Improved `plot_dendrogram` function with some modifications, as like as the other radialtree functions (`calculate_positions` and `draw_tree`), added tests for these.
+- Changed Visualizers attribute `reduced` type to dict instead of a single numpy array, to allow for multiple reduced embeddings to be stored and accessed by their reduction method name.
+- Changed default value of `red_method` parameter in plotting functions to 'pca' instead of 'auto', as 'auto' is no more useful, so it is deprecated and will be removed in future releases (FutureWarning added).
+
+### Added
+- Added public API in `__init__.py` to import classes directly from the package.
+
+### Fixed
+- Removed automatic optional dependency installation. Added `umap-learn` to optional dependencies.
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
