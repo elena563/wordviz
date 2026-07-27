@@ -9,7 +9,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.4.0**
+**version 0.4.1**
 
 Documentation: https://wordviz.readthedocs.io/
 
@@ -25,14 +25,15 @@ Built with:
 ## Last Version Updates
 
 ### Updated
-- Changed Visualizers attribute `reduced` type to dict instead of a single numpy array, to allow for multiple reduced embeddings to be stored and accessed by their reduction method name.
-- Changed default value of `red_method` parameter in plotting functions to 'pca' instead of 'auto', as 'auto' is no more useful, so it is deprecated and will be removed in future releases (FutureWarning added).
+- Edit `embedding_distance` (old `word_distance`) to use `compute_distances` function for flexibility in distance calculations.
+- Little optimizations in `n_most_similar` function to avoid redundant computations and improve performance. 
 
 ### Added
-- Added public API in `__init__.py` to import classes directly from the package.
+- Added tests for `similarity` module.
 
-### Fixed
-- Removed automatic optional dependency installation. Added `umap-learn` to optional dependencies.
+### Deprecated
+- From `/similarity`:
+  * `word_distance` will change name to `embedding_distance` (FutureWarning added)
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
@@ -74,8 +75,7 @@ This warning will be removed in the next versions of wordviz, as Python 3.13 wil
 You can load and manage embeddings though the `EmbeddingLoader` class, and then visualize them with the `Visualizer` (or `Visualizer3D`) class.
 
 ```python
-from wordviz.loading import EmbeddingLoader
-from wordviz.plotting import Visualizer
+from wordviz import EmbeddingLoader, Visualizer
 
 loader = EmbeddingLoader()
 loader.load_from_file('path/to/your/embedding/file', 'word2vec')

@@ -1,5 +1,5 @@
 # Changelog
-## [Unreleased]
+## [0.4.1] - 27/07/2026
 ### Updated
 - Edit `embedding_distance` (old `word_distance`) to use `compute_distances` function for flexibility in distance calculations.
 - Little optimizations in `n_most_similar` function to avoid redundant computations and improve performance. 
