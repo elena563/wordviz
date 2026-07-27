@@ -1,4 +1,15 @@
 # Changelog
+## [Unreleased]
+### Updated
+- Edit `embedding_distance` (old `word_distance`) to use `compute_distances` function for flexibility in distance calculations.
+- Little optimizations in `n_most_similar` function to avoid redundant computations and improve performance. 
+
+### Added
+- Added tests for `similarity` module.
+
+### Deprecated
+- From `/similarity`:
+  * `word_distance` will change name to `embedding_distance` (FutureWarning added)
 
 ## [0.4.0] - 22/07/2026
 ### Updated
