@@ -1,4 +1,13 @@
 # Changelog
+## [0.5.0] - Unreleased
+### Updated
+- Adapted `map_colors` function to handle both class labels and cluster labels, with appropriate legend labeling. Changed color format to hex for better compatibility with Plotly.
+- Moved optional `classes` parameter to the end of the `load_contextual` method signature for better clarity and usability.
+
+### Added
+- Added getter and setter for the `classes` property to use it also with static embeddings.
+- Added tests for `map colors` function.
+
 ## [0.4.1] - 27/07/2026
 ### Updated
 - Edit `embedding_distance` (old `word_distance`) to use `compute_distances` function for flexibility in distance calculations.

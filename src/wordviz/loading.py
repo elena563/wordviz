@@ -32,6 +32,8 @@ class EmbeddingLoader:
             - 'sentence': Sentence/document/passage embeddings
             - 'word_context': Word embeddings in different contexts  
             - 'custom': User-defined
+        classes : list of str, optional
+            Class labels for the embeddings, used for coloring in visualizations.
         """
     def __init__(self):
         self.embeddings_raw = None 
@@ -39,12 +41,25 @@ class EmbeddingLoader:
         self.tokens = None         
         self.dimension = None
         self.type = None
-        self.classes = None
+        self._classes = None
         self.embeddings_subset = None
         self.tokens_subset = None
 
         with open(os.path.join(os.path.dirname(__file__), 'pretrained_embeddings.json')) as f:
             self.available_pretrained = json.load(f)
+
+    @property
+    def classes(self):
+        return self._classes
+
+    @classes.setter
+    def classes(self, value: list[str]):
+        if value is not None:
+            if len(value) != len(self.tokens):
+                raise ValueError(
+                    f"'classes' length ({len(value)}) must match number of tokens ({len(self.tokens)})"
+                )
+        self._classes = value
             
     def get_cache_dir(self) -> Path:
         cache_dir = Path.home() / ".wordviz_cache"
@@ -214,7 +229,7 @@ class EmbeddingLoader:
         return self.embeddings
     
     
-    def load_contextual(self, embeddings, labels: list, classes: list = None, embedding_type: str = 'sentence') -> np.ndarray:
+    def load_contextual(self, embeddings, labels: list, embedding_type: str = 'sentence', classes: list = None) -> np.ndarray:
         """
         Loads embeddings from contextual models.
         
@@ -226,13 +241,13 @@ class EmbeddingLoader:
             - List[List[float]] 
         labels: list of str
             labels corresponding to embedding 
-        classes: list of str, optional
-            Class labels for the embeddings
         embedding_type: str
             - 'sentence': Sentence/document/passage embeddings
             - 'word_context': Word embeddings in different contexts  
             - 'word': word embeddings
             - 'custom': User-defined
+        classes: list of str, optional
+            Class labels for the embeddings
         Returns
         --------
         np.ndarray

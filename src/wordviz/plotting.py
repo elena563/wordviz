@@ -115,17 +115,23 @@ class BaseVisualizer:
         return fig, ax, style
     
 
-    def map_colors(self, labels, theme):
-        '''automatizes color and legend label mapping for clustering applied to embeddings'''
+    def map_colors(self, labels: list, theme: str = 'light1', cluster_mode: bool = False) -> tuple[list, dict]:
+        '''automatizes color and legend label mapping for any categorical label applied to embeddings'''
         colors = self.get_theme(theme)
 
         unique_classes = list(set(labels))
         palette = sns.color_palette(colors['clusters'], n_colors=len(unique_classes))
-        class_to_color = dict(zip(unique_classes, palette))
-        colors = [class_to_color[label] for label in labels]
-        legend_labels = {label: (class_to_color[label], f'Cluster {label+1}') for label in unique_classes}
+        class_to_color = {
+            label: '#{:02x}{:02x}{:02x}'.format(int(r*255), int(g*255), int(b*255))
+            for label, (r, g, b) in zip(unique_classes, palette)
+        }
+        mapped_colors = [class_to_color[label] for label in labels]
+        legend_labels = {
+            label: (class_to_color[label], f'Cluster {index+1}' if cluster_mode else str(label).title())
+            for index, label in enumerate(unique_classes)
+        }
 
-        return colors, legend_labels
+        return mapped_colors, legend_labels
 
 
     def select_sparse_labels(self, embeddings, n):
@@ -512,7 +518,7 @@ class Visualizer(BaseVisualizer):
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
-        clusters_colors, legend_labels = self.map_colors(clusters, theme=theme)
+        clusters_colors, legend_labels = self.map_colors(clusters, theme=theme, cluster_mode=True)
 
         fig, ax, colors = self._setup_plot(theme, grid, title)
         ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=clusters_colors, alpha=0.5, s=14, marker='o')
@@ -574,9 +580,7 @@ class Visualizer(BaseVisualizer):
 
         if classes is not None:
             unique = list(dict.fromkeys(classes))  
-            palette = sns.color_palette('tab10', n_colors=len(unique))
-            color_map = {label: f'rgb({int(r*255)},{int(g*255)},{int(b*255)})'
-                        for label, (r, g, b) in zip(unique, palette)}
+            color_map, _ = self.map_colors(classes, theme=theme)
             
             fig = go.Figure()
             for label in unique:
@@ -720,8 +724,8 @@ class Visualizer(BaseVisualizer):
         
         ax.set_title(title or f'Word Embedding Dendrogram', fontsize=12, fontweight='bold')
         ax.set_ylim(0, label_distance + 0.05)
-        ax.set_theta_zero_location('N')  # 0° in alto
-        ax.set_theta_direction(1)  # senso orario
+        ax.set_theta_zero_location('N') 
+        ax.set_theta_direction(1)
         
         ax.spines['polar'].set_visible(False)
         if not grid:

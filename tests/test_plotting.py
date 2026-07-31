@@ -1,9 +1,21 @@
-import matplotlib
-matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import plotly.graph_objects as go
+import re
 import pytest
 
+
+def test_map_colors(vis, loader):
+    colors_list, colors_dict = vis.map_colors(loader.classes, theme='light1', cluster_mode=True)
+    hex_pattern = re.compile(r'^#[0-9a-f]{6}$')
+    
+    assert isinstance(colors_list, list)
+    assert isinstance(colors_dict, dict)
+    assert len(colors_list) == len(loader.tokens)
+    assert len(colors_dict) == len(set(loader.classes))
+    assert all(hex_pattern.match(color) for color in colors_list)
+    assert all(hex_pattern.match(color[0]) for color in colors_dict.values())
+    assert colors_dict[list(colors_dict.keys())[0]][1] == 'Cluster 1'
+    assert colors_dict[list(colors_dict.keys())[1]][1] == 'Cluster 2'
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_embeddings(vis, red_method):
@@ -13,7 +25,7 @@ def test_plot_embeddings(vis, red_method):
     assert isinstance(fig, plt.Figure)
     assert isinstance(ax, plt.Axes)
 
-def test_plot_cache_reuse(vis, mocker):
+def test_plot_cache_reuse(vis):
     vis.plot_embeddings(red_method='pca')
     cached = vis.reduced.get('pca')
     assert cached is not None

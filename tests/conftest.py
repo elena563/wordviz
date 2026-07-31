@@ -1,5 +1,7 @@
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import pytest
 from wordviz.loading import EmbeddingLoader
 from wordviz.plotting import Visualizer
@@ -21,12 +23,16 @@ def loader_static():
 def vis_static():
     return Visualizer(loader_static)
 
-
 @pytest.fixture(scope='session')
-def vis():
+def loader():
     loader = EmbeddingLoader()
     np.random.seed(42)
     fake_embeddings = np.random.randn(50, 384)
     fake_labels = [f"This is test sentence number {i}." for i in range(50)]
-    loader.load_contextual(fake_embeddings, fake_labels, 'sentence')
+    fake_classes = ['class1' for _ in range(len(fake_embeddings)//2)] + ['class2' for _ in range(len(fake_embeddings)//2)]
+    loader.load_contextual(fake_embeddings, fake_labels, 'sentence', fake_classes)
+    return loader
+
+@pytest.fixture(scope='session')
+def vis(loader):
     return Visualizer(loader)
