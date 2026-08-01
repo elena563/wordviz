@@ -74,7 +74,7 @@ class BaseVisualizer:
         return emb, tokens
     
 
-    def _setup_plot(self, theme, grid, title, dims=2):
+    def _setup_plot(self, reduced_emb: np.ndarray, theme: str, grid: bool, title: str, dims: int = 2, labels=None, for_clustering=False) -> tuple[plt.Figure, plt.Axes, dict]:
         '''base private function to config matplotlib plot'''
         style = self.get_theme(theme)
 
@@ -111,6 +111,30 @@ class BaseVisualizer:
 
         if title is not None:
             plt.title(title, fontsize=12, fontweight='bold', color=style['text'])
+
+        style = self.get_theme(theme)
+
+        coords = (reduced_emb[:, 0], reduced_emb[:, 1], reduced_emb[:, 2]) if dims == 3 else (reduced_emb[:, 0], reduced_emb[:, 1])
+
+        if labels is None:
+            ax.scatter(*coords, c=style['points'], alpha=0.5, s=14, marker='o')
+        else:
+            if for_clustering:
+                colors, legend_labels = self.map_colors(labels, theme, cluster_mode=True)
+            else:
+                colors, legend_labels = self.map_colors(labels, theme)
+
+            ax.scatter(*coords, c=colors, alpha=0.5, s=14, marker='o')
+
+            legend_elements = [plt.Line2D([0], [0], marker='o',
+                                color=color,
+                                label=label_text,
+                                markerfacecolor=color,
+                                markersize=8,
+                                linestyle='None')
+                              for label, (color, label_text) in legend_labels.items()]
+
+            ax.legend(handles=legend_elements, facecolor=style['bg'], labelcolor=style['text'])
 
         return fig, ax, style
     
@@ -153,7 +177,7 @@ class Visualizer(BaseVisualizer):
         self.reduced_subset = None
 
 
-    def plot_embeddings(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False):   
+    def plot_embeddings(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False, color_by_class: bool = False) -> tuple[plt.Figure, plt.Axes]:   
         '''
         Creates a simple static 2D scatterplot of the embeddings.
 
@@ -171,6 +195,8 @@ class Visualizer(BaseVisualizer):
             Number of word labels to display. If 0, no labels are shown.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
+        color_by_class : bool, default=False
+            If True, colors the points based on their class labels.
 
         Returns
         --------
@@ -180,8 +206,15 @@ class Visualizer(BaseVisualizer):
 
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
-        fig, ax, colors = self._setup_plot(theme, grid, title)
-        ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=colors['points'], alpha=0.5, s=14, marker='o')
+        if color_by_class:
+            if self.loader.classes is None:
+                raise ValueError("No class labels found. Please define class labels to color by class.")
+            else:
+                classes = self.loader.classes
+        else:
+            classes = None
+
+        fig, ax, colors = self._setup_plot(reduced_emb, theme, grid, title, labels=classes)
 
         texts = []
         if nlabels > 0:
@@ -233,20 +266,21 @@ class Visualizer(BaseVisualizer):
         words = [target_word] + similar_words
 
         reduced_emb = reduce_dim(vectors, method=red_method)
+        target_reduced = reduced_emb[0]
+        similar_reduced = reduced_emb[1:]
 
         if title is None:
             title = f"Top {n} words similar to '{target_word}'"
 
-        fig, ax, colors = self._setup_plot(theme, grid, title)
+        fig, ax, colors = self._setup_plot(similar_reduced, theme, grid, title)
         
         texts = []
-        ax.scatter(reduced_emb[0, 0], reduced_emb[0, 1], c=colors['target'], alpha=0.5, s=20, marker='o')
-        texts.append(ax.text(reduced_emb[0, 0], reduced_emb[0, 1], target_word,
+        ax.scatter(target_reduced[0], target_reduced[1], c=colors['target'], alpha=0.5, s=20, marker='o')
+        texts.append(ax.text(target_reduced[0], target_reduced[1], target_word,
                 color=colors['text'], fontsize=9, fontweight='bold', alpha=1, ha='center', va='bottom'))
         
-        ax.scatter(reduced_emb[1:, 0], reduced_emb[1:, 1], c=colors['points'], alpha=0.5, s=20, marker='o')
         for i, word in enumerate(similar_words):
-            texts.append(ax.text(reduced_emb[i+1, 0], reduced_emb[i+1, 1], word,
+            texts.append(ax.text(similar_reduced[i, 0], similar_reduced[i, 1], word,
                     color=colors['text'], fontsize=9, alpha=1, ha='center', va='bottom'))
         
        
@@ -518,22 +552,12 @@ class Visualizer(BaseVisualizer):
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
         clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
-        clusters_colors, legend_labels = self.map_colors(clusters, theme=theme, cluster_mode=True)
 
-        fig, ax, colors = self._setup_plot(theme, grid, title)
-        ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=clusters_colors, alpha=0.5, s=14, marker='o')
+        fig, ax, colors = self._setup_plot(reduced_emb, theme, grid, title, labels=clusters, for_clustering=True)
 
         if show_centers and centers is not None:
             for i in range(n_clusters):
                 ax.scatter(centers[i, 0], centers[i, 1], edgecolors="grey", color=colors['text'], s=40, alpha=0.8, marker='o')
-
-        legend_elements = [plt.Line2D([0], [0], marker='o',
-                            color=color,                  
-                            label=label_text,
-                            markerfacecolor=color,       
-                            markersize=8,
-                            linestyle='None') 
-                      for label, (color, label_text) in legend_labels.items()]
 
         texts=[] 
         if nlabels > 0:
@@ -542,7 +566,6 @@ class Visualizer(BaseVisualizer):
                 texts.append(ax.text(reduced_emb[i, 0], reduced_emb[i, 1], tokens[i],
                         color=colors['text'], fontsize=9, alpha=1, ha='center', va='bottom'))
                 
-        ax.legend(handles=legend_elements, facecolor=colors['bg'], labelcolor=colors['text'])
         adjust_text(texts, ax=ax, expand=(1.2, 2), arrowprops=dict(arrowstyle='-', color=colors['text']))
         plt.rcParams['figure.dpi'] = 600
         plt.show()

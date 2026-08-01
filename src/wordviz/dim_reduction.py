@@ -44,7 +44,7 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
     default_params = {
         'pca': {},
         'tsne': {'random_state': 42, 'perplexity': 10},
-        'umap': {'n_neighbors': 15, 'min_dist': 0.1, 'random_state': 42},
+        'umap': {'n_neighbors': min(15, len(vectors) - 1), 'min_dist': 0.1, 'random_state': 42},
         'isomap': {'n_neighbors': 5},
         'mds': {'metric':True, 'n_init':3, 'max_iter':300, 'random_state':42, 'dissimilarity': 'euclidean'}
     }

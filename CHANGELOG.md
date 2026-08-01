@@ -7,6 +7,11 @@
 ### Added
 - Added getter and setter for the `classes` property to use it also with static embeddings.
 - Added tests for `map colors` function.
+- All scatter plots now support coloring by class labels if available, with a new `color_by_class` parameter in the plotting functions.
+
+### Fixed
+- Added default n_neighbors parameter to UMAP dimensionality reduction to avoid errors when the number of samples is less than 15.
+- Fixed `plot_similarity` 3d function, which displayed incorrect target word position.
 
 ## [0.4.1] - 27/07/2026
 ### Updated

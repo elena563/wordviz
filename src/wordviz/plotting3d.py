@@ -17,21 +17,20 @@ class Visualizer3D(BaseVisualizer):
         self.reduced: dict[str, np.ndarray] = {}
         self.reduced_subset = None
 
-    def _setup_3d(self, reduced_emb, theme, grid, tokens, title, def_title, labels=None):
+    def _setup_3d(self, reduced_emb, theme, grid, tokens, title, def_title, labels=None, for_clustering=False):
         '''base private function to config plotly 3d plot'''
         df = pd.DataFrame(reduced_emb, columns=['x', 'y', 'z'])
 
         style = self.get_theme(theme)
         kwargs = {}
         if labels is not None:
-            colors, legend_labels  = self.map_colors(labels, theme)
+            _, legend_labels  = self.map_colors(labels, theme, cluster_mode=for_clustering)
 
-            df['label'] = labels
-            df['name'] = [f'Cluster {label+1}' for label in labels]
+            df['name'] = [legend_labels[label][1] for label in labels]
 
             color_discrete_map = {
-                legend_labels[label_num][1]: f'rgb({int(color_tuple[0]*255)}, {int(color_tuple[1]*255)}, {int(color_tuple[2]*255)})'
-                for label_num, (color_tuple, _) in legend_labels.items()
+                legend_labels[label][1]: legend_labels[label][0]
+                for label in legend_labels
             }
 
             kwargs['color'] = 'name'
@@ -79,7 +78,7 @@ class Visualizer3D(BaseVisualizer):
         return fig
 
 
-    def plot_static(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False):
+    def plot_static(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False, color_by_class: bool = False) -> tuple[plt.Figure, plt.Axes]:
         '''
         Creates a simple static 3D scatterplot of the embeddings.
 
@@ -97,6 +96,8 @@ class Visualizer3D(BaseVisualizer):
             Number of word labels to display. If 0, no labels are shown.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
+        color_by_class : bool, default=False
+            If True, colors the points based on their class labels.
 
         Returns
         --------
@@ -106,7 +107,15 @@ class Visualizer3D(BaseVisualizer):
 
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
 
-        fig, ax, colors = self._setup_plot(theme, grid, title, dims=3)
+        if color_by_class:
+            if self.loader.classes is None:
+                raise ValueError("No class labels found. Please define class labels to color by class.")
+            else:
+                classes = self.loader.classes
+        else:
+            classes = None
+
+        fig, ax, colors = self._setup_plot(reduced_emb, theme, grid, title, dims=3, labels=classes)
         ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], reduced_emb[:, 2], c=colors['points'], alpha=0.5, s=14, marker='o')
 
         texts = []
@@ -121,7 +130,7 @@ class Visualizer3D(BaseVisualizer):
         return fig, ax
     
 
-    def plot_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False):
+    def plot_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False, color_by_class=False):
         '''
         Creates an interactive 3D scatterplot of embeddings using Plotly.
 
@@ -137,6 +146,8 @@ class Visualizer3D(BaseVisualizer):
             Title of the plot. If None, no title is shown.
         use_subset : bool, default=False
             If True, uses the embedding subset instead of the full embeddings.
+        color_by_class : bool, default=False
+            If True, colors the points based on their class labels.
 
         Returns:
         --------
@@ -152,7 +163,15 @@ class Visualizer3D(BaseVisualizer):
         )
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
 
-        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title="Word Embedding 3D Plot")
+        if color_by_class:
+            if self.loader.classes is None:
+                raise ValueError("No class labels found. Please define class labels to color by class.")
+            else:
+                classes = self.loader.classes
+        else:
+            classes = None
+
+        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title="Word Embedding 3D Plot", labels=classes)
 
         return fig
 
@@ -193,14 +212,16 @@ class Visualizer3D(BaseVisualizer):
         words = [target_word] + similar_words
 
         reduced_emb = reduce_dim(vectors, method=red_method, n_dimensions=3)
+        target_reduced = reduced_emb[0]
+        similar_reduced = reduced_emb[1:]
 
-        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=words, title=title, def_title=f"Top {n} words similar to '{target_word}'")
+        fig = self._setup_3d(reduced_emb=similar_reduced, theme=theme, grid=grid, tokens=words, title=title, def_title=f"Top {n} words similar to '{target_word}'")
 
         style = self.get_theme(theme)
         fig.add_trace(go.Scatter3d(
-                x=[target_vec[0]],
-                y=[target_vec[1]],
-                z=[target_vec[2]],
+                x=[target_reduced[0]],
+                y=[target_reduced[1]],
+                z=[target_reduced[2]],
                 mode='markers',
                 marker=dict(
                     size=5,
@@ -255,9 +276,8 @@ class Visualizer3D(BaseVisualizer):
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
 
         clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
-        clusters_colors, legend_labels = self.map_colors(clusters, theme=theme)
 
-        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title=f"3D Clustering Scatterplot", labels=clusters)
+        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title=f"3D Clustering Scatterplot", labels=clusters, for_clustering=True)
 
         color = 'white' if 'dark' in theme else 'black'
         

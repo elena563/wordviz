@@ -18,8 +18,9 @@ def test_map_colors(vis, loader):
     assert colors_dict[list(colors_dict.keys())[1]][1] == 'Cluster 2'
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_embeddings(vis, red_method):
-    fig, ax = vis.plot_embeddings(red_method=red_method)
+@pytest.mark.parametrize("color_by_class", [True, False])
+def test_plot_embeddings(vis, red_method, color_by_class):
+    fig, ax = vis.plot_embeddings(red_method=red_method, color_by_class=color_by_class)
     assert 'pca' in vis.reduced
     assert vis.reduced['pca'].shape[1] == 2
     assert isinstance(fig, plt.Figure)
