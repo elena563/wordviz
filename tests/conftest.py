@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import pytest
-from wordviz.loading import EmbeddingLoader
-from wordviz.plotting import Visualizer
+from wordviz import EmbeddingLoader, Visualizer, Visualizer3D
 
 @pytest.fixture(scope='session')
 def sample_embeddings():
@@ -36,3 +35,7 @@ def loader():
 @pytest.fixture(scope='session')
 def vis(loader):
     return Visualizer(loader)
+
+@pytest.fixture(scope='session')
+def vis3d(loader):
+    return Visualizer3D(loader)

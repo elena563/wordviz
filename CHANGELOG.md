@@ -1,5 +1,5 @@
 # Changelog
-## [0.5.0] - Unreleased
+## [0.5.0] - 01/08/2026
 ### Updated
 - Adapted `map_colors` function to handle both class labels and cluster labels, with appropriate legend labeling. Changed color format to hex for better compatibility with Plotly.
 - Moved optional `classes` parameter to the end of the `load_contextual` method signature for better clarity and usability.

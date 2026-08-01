@@ -9,7 +9,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.4.1**
+**version 0.5.0**
 
 Documentation: https://wordviz.readthedocs.io/
 
@@ -25,15 +25,17 @@ Built with:
 ## Last Version Updates
 
 ### Updated
-- Edit `embedding_distance` (old `word_distance`) to use `compute_distances` function for flexibility in distance calculations.
-- Little optimizations in `n_most_similar` function to avoid redundant computations and improve performance. 
+- Adapted `map_colors` function to handle both class labels and cluster labels, with appropriate legend labeling. Changed color format to hex for better compatibility with Plotly.
+- Moved optional `classes` parameter to the end of the `load_contextual` method signature for better clarity and usability.
 
 ### Added
-- Added tests for `similarity` module.
+- Added getter and setter for the `classes` property to use it also with static embeddings.
+- Added tests for `map colors` function.
+- All scatter plots now support coloring by class labels if available, with a new `color_by_class` parameter in the plotting functions.
 
-### Deprecated
-- From `/similarity`:
-  * `word_distance` will change name to `embedding_distance` (FutureWarning added)
+### Fixed
+- Added default n_neighbors parameter to UMAP dimensionality reduction to avoid errors when the number of samples is less than 15.
+- Fixed `plot_similarity` 3d function, which displayed incorrect target word position.
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
