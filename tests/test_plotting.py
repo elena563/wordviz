@@ -35,8 +35,9 @@ def test_plot_cache_reuse(vis):
     assert vis.reduced.get('pca') is cached
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_clusters(vis, red_method):
-    fig, ax = vis.plot_clusters(red_method=red_method)
+@pytest.mark.parametrize("method", ["kmeans", "dbscan", "hdbscan", "hierarchical", "gmm"])
+def test_plot_clusters(vis, red_method, method):
+    fig, ax = vis.plot_clusters(red_method=red_method, method=method)
     assert isinstance(fig, plt.Figure)
     assert isinstance(ax, plt.Axes)
 

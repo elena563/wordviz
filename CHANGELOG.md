@@ -1,4 +1,14 @@
 # Changelog
+
+## [0.6.0] - Unreleased
+### Added
+- Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.
+- New `metric` parameter in `plot_clusters` to select the distance metric for clustering, with default values based on the chosen method.
+
+### Fixed
+- Better error handling in the clustering functions.
+- Removed automatic dimensionality reduction before clustering, reducing coupling between clustering and reduction.
+
 ## [0.5.0] - 01/08/2026
 ### Updated
 - Adapted `map_colors` function to handle both class labels and cluster labels, with appropriate legend labeling. Changed color format to hex for better compatibility with Plotly.

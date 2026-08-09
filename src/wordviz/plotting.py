@@ -518,9 +518,10 @@ class Visualizer(BaseVisualizer):
     
     
 
-    def plot_clusters(self, n_clusters: int = 5, method: str ='kmeans', red_method: str ='auto', show_centers: bool =False, grid: bool =True, theme: str ='light1', title: str =None, nlabels: int =0, use_subset: bool =False):
+    def plot_clusters(self, n_clusters: int = 5, method: str ='kmeans', metric: str = None, red_method: str ='auto', show_centers: bool =False, grid: bool =True, theme: str ='light1', title: str =None, nlabels: int =0, use_subset: bool =False):
         '''
         Creates a 2D scatterplot of clustered embeddings using a clustering algorithm.
+        Dimensionality reduction is performed before clustering, in order to enhance visualization and reduce noise.
 
         Parameters:
         -----------
@@ -528,6 +529,8 @@ class Visualizer(BaseVisualizer):
             Number of clusters to generate.
         method : str, default='kmeans'
             Clustering method to use ('kmeans' or others supported by create_clusters).
+        metric : str, optional
+            Distance metric to use for clustering.
         red_method : str, default='auto' -> auto is deprecated, will default to pca in future releases
             Dimensionality reduction method to apply ('pca', 'tsne', 'umap', etc.). If 'auto' searches for cached reduction, if None runs pca.
         show_centers : bool, default=False
@@ -551,7 +554,7 @@ class Visualizer(BaseVisualizer):
 
         reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method)
 
-        clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method)
+        clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method, metric=metric)
 
         fig, ax, colors = self._setup_plot(reduced_emb, theme, grid, title, labels=clusters, for_clustering=True)
 

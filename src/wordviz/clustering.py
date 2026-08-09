@@ -1,14 +1,13 @@
 import numpy as np
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans, DBSCAN, HDBSCAN
+from sklearn.mixture import GaussianMixture
 from typing import Tuple, Optional
 from scipy.cluster.hierarchy import linkage, fcluster
-from .dim_reduction import reduce_dim
 
 
-def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kmeans') -> Tuple[np.ndarray, Optional[np.ndarray], np.ndarray]:
+def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kmeans', metric: str = None) -> Tuple[np.ndarray, Optional[np.ndarray], np.ndarray]:
     '''
     Performs clustering on embeddings for visualization purposes.
-    If the input vectors have more than 2 dimensions, dimensionality reduction is applied first.
 
     Parameters:
     -----------
@@ -17,7 +16,14 @@ def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kme
     n_clusters : int, default=5
         Number of clusters to generate (used only for k-means).
     method : str, default='kmeans'
-        Clustering method to use ('kmeans' or 'dbscan').
+        Clustering method to use. Options are:
+        - 'kmeans': K-Means clustering
+        - 'dbscan': Density-Based Spatial Clustering of Applications with Noise
+        - 'hdbscan': Hierarchical Density-Based Spatial Clustering of Applications with Noise
+        - 'hierarchical': Hierarchical clustering
+        - 'gmm': Gaussian Mixture Model clustering
+    metric : str, default=None
+        Distance metric to use for clustering (used only for methods that support it).
 
     Returns:
     --------
@@ -27,25 +33,37 @@ def create_clusters(vectors: np.ndarray, n_clusters: int = 5, method: str = 'kme
         Coordinates of cluster centers (only for k-means; None for dbscan).
     reduced_emb : np.ndarray
         2D reduced embeddings used for clustering and plotting.
-    '''
+    ''' 
 
-    if vectors.shape[1] > 3:
-        reduced_emb = reduce_dim(vectors)  
-    else:
-        reduced_emb = vectors  
+    if method not in ['kmeans', 'dbscan', 'hdbscan', 'hierarchical', 'gmm']:
+        raise ValueError(f"Invalid clustering method: {method}. Choose from 'kmeans', 'dbscan', 'hdbscan', 'hierarchical', or 'gmm'.")
+
+    if metric is None:
+        metric = 'euclidean' if method in ['kmeans', 'gmm'] else 'cosine'
+
+    if method in ['kmeans', 'gmm'] and metric != 'euclidean':
+        raise ValueError(f"{method} only support 'euclidean' metric. Please use 'euclidean' for these methods.")
 
     match method:
         case 'hierarchical':
-            Z = linkage(reduced_emb, method='single')
+            Z = linkage(vectors, method='single', metric=metric)
             labels = fcluster(Z, t=n_clusters, criterion='maxclust') 
             centers = None
         case 'kmeans':
-            clustering = KMeans(n_clusters=n_clusters, random_state=0, n_init="auto").fit(reduced_emb)
+            clustering = KMeans(n_clusters=n_clusters, random_state=0, n_init="auto").fit(vectors)
             labels= clustering.labels_
             centers = clustering.cluster_centers_
         case 'dbscan':
-            clustering = DBSCAN(eps=0.5, min_samples=n_clusters).fit(reduced_emb)
+            clustering = DBSCAN(eps=0.5, metric=metric).fit(vectors)
             labels= clustering.labels_
             centers = None
+        case 'hdbscan':
+            clustering = HDBSCAN(metric=metric).fit(vectors)
+            labels= clustering.labels_
+            centers = None
+        case 'gmm':
+            clustering = GaussianMixture(n_components=n_clusters, random_state=0).fit(vectors)
+            labels = clustering.predict(vectors)
+            centers = clustering.means_
 
-    return labels, centers, reduced_emb
+    return labels, centers, vectors

@@ -27,6 +27,7 @@ def test_plot_similarity_3d(vis3d, dist, red_method):
     assert isinstance(fig, go.Figure)
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_clusters_3d(vis3d, red_method):
-    fig = vis3d.plot_clusters(red_method=red_method)
+@pytest.mark.parametrize("method", ["kmeans", "dbscan", "hdbscan", "hierarchical", "gmm"])
+def test_plot_clusters_3d(vis3d, red_method, method):
+    fig = vis3d.plot_clusters(red_method=red_method, method=method)
     assert isinstance(fig, go.Figure)
