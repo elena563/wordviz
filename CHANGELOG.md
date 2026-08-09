@@ -4,10 +4,15 @@
 ### Added
 - Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.
 - New `metric` parameter in `plot_clusters` to select the distance metric for clustering, with default values based on the chosen method.
+- New `ReducedCache` class to manage reduced embeddings for both 2D and 3D visualizations, allowing for more efficient caching, validation and retrieval of reduced embeddings.
+- Added `custom` parameter for `red_method` to use embeddings reduced by external methods, with validation of shape and dimensionality. 
 
 ### Fixed
 - Better error handling in the clustering functions.
 - Removed automatic dimensionality reduction before clustering, reducing coupling between clustering and reduction.
+
+### Updated
+- `compute_distances` now can handle distances between a target embedding and a set of embeddings, reducing complexity from n^3 to n^2. A benchmark test was added to validate the performance improvement.
 
 ## [0.5.0] - 01/08/2026
 ### Updated

@@ -114,9 +114,7 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         batch_words = filtered_words[i:i+batch_size]
         batch_vectors = filtered_embeddings[i:i+batch_size]
         
-        X = np.vstack([target_vector, batch_vectors])
-        D = compute_distances(X, metric=dist)
-        distances = D[0, 1:] 
+        distances = compute_distances(batch_vectors, metric=dist, target=target_vector)
         
         all_distances.extend(distances)
         all_indices.extend(range(i, min(i+batch_size, len(filtered_words))))
@@ -137,7 +135,7 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
 
 
 
-def compute_distances(X: np.ndarray, metric: str='euclidean') -> np.ndarray:
+def compute_distances(X: np.ndarray, metric: str='euclidean', target: np.ndarray = None) -> np.ndarray:
     '''
     Computes pairwise distances between rows of a matrix X using the specified metric.
 
@@ -148,20 +146,47 @@ def compute_distances(X: np.ndarray, metric: str='euclidean') -> np.ndarray:
     metric : str, default='euclidean'
         The distance metric to use.
         Options include 'euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev', 'dot', 'pearson', and 'spearman'.
+    target : np.ndarray, optional
+        If provided, computes distances from the target vector to each row in X instead of pairwise distances among rows of X.
     
     Returns
     --------
     distances : np.ndarray
         A 2D array of distances. If target is provided, returns a 1D array of distances from the target to each row in X.
     '''
+
     if metric in ['euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev']:
+        if target is not None:
+            X = np.vstack([target, X])
+            distances = pairwise_distances(X, metric=metric, Y=target.reshape(1, -1))
+            return distances[0, 1:]
         return pairwise_distances(X, metric=metric)
+    
     elif metric == 'dot':
+        if target is not None:
+            return 1 - (X @ target)
         return 1 - (X @ X.T)
+    
     elif metric == 'pearson':
-        corr = np.corrcoef(X)
-        return 1 - corr
+        if target is not None:
+            combined = np.vstack([target, X])
+        else:
+            combined = X
+        
+        stds = combined.std(axis=1, keepdims=True)
+        stds = np.where(stds == 0, np.finfo(float).tiny, stds)      # avoid division by zero
+        combined = (combined - combined.mean(axis=1, keepdims=True)) / stds
+        corr = np.corrcoef(combined) if target is None else (combined @ combined.T) / combined.shape[1]
+        corr = 1 - corr
+        
+        if target is not None:
+            return corr[0, 1:]
+        return corr
+    
     elif metric == 'spearman':
+        if target is not None:
+            distances = np.array([1 - spearmanr(target, X[i])[0] for i in range(X.shape[0])])
+            return distances
         n = X.shape[0]
         dist_mat = np.zeros((n, n))
         for i in range(n):
