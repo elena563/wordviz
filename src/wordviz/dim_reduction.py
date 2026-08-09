@@ -7,6 +7,8 @@ from sklearn.manifold import Isomap
 from sklearn.manifold import MDS
 import warnings
 
+SUPPORTED_METHODS = ('pca', 'tsne', 'umap', 'isomap', 'mds')
+
 def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, dist: str = 'euclidean', **kwargs) -> np.ndarray:
     ''' 
     Applies dimensionality reduction for visualization to input vectors using a specified method.
@@ -52,7 +54,7 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
     if method in default_params:
         params = {**default_params[method.lower()], **kwargs}
     else:
-        raise ValueError(f"Method {method} not supported. Choose between 'pca', 'tsne', 'umap', 'isomap' or 'mds'")
+        raise ValueError(f"Method {method} not supported. Choose between {', '.join(SUPPORTED_METHODS)}")
 
     match method.lower():
         case 'pca':
@@ -76,5 +78,24 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
     reduced_emb = reducer.fit_transform(vectors)
     
     return reduced_emb
+
+
+class ReducedCache(dict):
+    def __init__(self, dims: int):
+        super().__init__()
+        self.dims = dims
+
+    def __setitem__(self, key, value):
+        if key != 'custom' and key not in SUPPORTED_METHODS:
+            raise ValueError(
+                f"Key must be a supported reduction method ({', '.join(SUPPORTED_METHODS)}) or 'custom', got '{key}'."
+            )
+        if key == 'custom':
+            arr = np.asarray(value)
+            if arr.ndim != 2 or arr.shape[1] != self.dims:
+                raise ValueError(
+                    f"'custom' must be a 2D array with {self.dims} columns, got shape {arr.shape}."
+                )
+        super().__setitem__(key, value)
         
     

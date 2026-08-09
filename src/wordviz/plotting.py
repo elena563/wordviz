@@ -12,7 +12,7 @@ from scipy.stats import gaussian_kde
 from scipy.cluster.hierarchy import linkage, dendrogram, fcluster, to_tree
 import warnings
 from .clustering import create_clusters
-from .dim_reduction import reduce_dim
+from .dim_reduction import reduce_dim, ReducedCache
 from .similarity import n_most_similar, compute_distances
 from .dendrogram_helpers import compute_positions, draw_tree
 
@@ -63,6 +63,18 @@ class BaseVisualizer:
                     stacklevel=2,
                 )
                 red_method = 'pca'
+
+            if red_method == 'custom':
+                reduced = self.reduced.get('custom')
+                if reduced is None:
+                    raise ValueError(
+                        "No custom reduction stored. Set viz.reduced['custom'] = <array> first."
+                    )
+                if reduced.shape[0] != len(tokens):
+                    raise ValueError(
+                        f"Custom reduction has {reduced.shape[0]} rows, expected {len(tokens)} to match the tokens."
+                    )
+                return reduced, tokens
 
             reduced = self.reduced.get(red_method)
             if reduced is None:
@@ -173,7 +185,7 @@ class BaseVisualizer:
 class Visualizer(BaseVisualizer):
     def __init__(self, loader):
         super().__init__(loader) 
-        self.reduced: dict[str, np.ndarray] = {}
+        self.reduced: dict[str, np.ndarray] = ReducedCache(dims=2)
         self.reduced_subset = None
 
 

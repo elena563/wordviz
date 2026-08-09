@@ -7,14 +7,14 @@ import plotly.graph_objects as go
 import warnings
 from .plotting import BaseVisualizer
 from .clustering import create_clusters
-from .dim_reduction import reduce_dim
+from .dim_reduction import reduce_dim, ReducedCache
 from .similarity import n_most_similar
 
 
 class Visualizer3D(BaseVisualizer):
     def __init__(self, loader):
         super().__init__(loader) 
-        self.reduced: dict[str, np.ndarray] = {}
+        self.reduced: dict[str, np.ndarray] = ReducedCache(dims=3)
         self.reduced_subset = None
 
     def _setup_3d(self, reduced_emb, theme, grid, tokens, title, def_title, labels=None, for_clustering=False):

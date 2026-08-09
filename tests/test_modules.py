@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
+from matplotlib import pyplot as plt
 
-from wordviz.dim_reduction import reduce_dim
+from wordviz.dim_reduction import reduce_dim, ReducedCache
 
 def test_reduce_dim_output_shape(sample_embeddings):
     reduced = reduce_dim(sample_embeddings, method='pca', n_dimensions=2)
@@ -21,3 +22,25 @@ def test_reduce_dim_invalid_method(sample_embeddings):
 def test_reduce_dim_preserves_samples(sample_embeddings):
     reduced = reduce_dim(sample_embeddings, method='pca', n_dimensions=2)
     assert reduced.shape[0] == sample_embeddings.shape[0]
+
+
+def test_reduced_cache():
+    cache = ReducedCache(2)
+    cache['pca'] = np.zeros((5, 2))
+    cache['custom'] = np.zeros((5, 2))
+    assert 'pca' in cache
+    assert 'custom' in cache
+
+    with pytest.raises(ValueError):
+        cache['custom'] = np.zeros((5, 3))
+
+    with pytest.raises(ValueError):
+        cache['foo'] = np.zeros((5, 2))
+
+    cache3 = ReducedCache(3)
+    cache3['custom'] = np.zeros((5, 3))
+    assert 'custom' in cache3
+
+def test_missing_custom_reduction(vis):
+    with pytest.raises(ValueError):
+        vis.plot_embeddings(red_method='custom')    # 'custom' is not defined in the cache
