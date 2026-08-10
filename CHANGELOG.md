@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 10/08/2026
 ### Added
 - Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.
 - New `metric` parameter in `plot_clusters` to select the distance metric for clustering, with default values based on the chosen method.

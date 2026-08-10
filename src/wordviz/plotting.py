@@ -793,14 +793,6 @@ class Visualizer(BaseVisualizer):
             ax.set_xticklabels([])
             ax.set_yticklabels([])
             ax.grid(True, alpha=0.3)
-        print("cut_distance:", cut_distance)
-        print("max_dist:", max_dist)
-        print("threshold_radius:", threshold_radius)
-        print("node_color:", node_color)
-        print("labels sample:", labels[:10])
-        print("class_to_color keys:", list(class_to_color.keys()))
-        print("n_clusters:", n_clusters)
-        print("Z ultimi 5 merge:", Z[-5:, 2])
         
         plt.tight_layout()
         return fig, ax

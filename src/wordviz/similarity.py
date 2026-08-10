@@ -89,7 +89,6 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         "Please update your code accordingly.",
         FutureWarning
     )
-    print('function in local with changes')
     words = loader.tokens
     embeddings = loader.embeddings
     
@@ -129,7 +128,7 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
     
     result_words = [filtered_words[all_indices[i]] for i in top_n_indices]
     result_distances = [all_distances[i] for i in top_n_indices]
-    result_vectors = result_vectors = filtered_embeddings[top_n_indices]
+    result_vectors = filtered_embeddings[top_n_indices]
     
     return result_words, result_vectors, result_distances
 
@@ -157,9 +156,8 @@ def compute_distances(X: np.ndarray, metric: str='euclidean', target: np.ndarray
 
     if metric in ['euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev']:
         if target is not None:
-            X = np.vstack([target, X])
-            distances = pairwise_distances(X, metric=metric, Y=target.reshape(1, -1))
-            return distances[0, 1:]
+            distances = pairwise_distances(target.reshape(1, -1), X, metric=metric)
+            return distances.ravel()
         return pairwise_distances(X, metric=metric)
     
     elif metric == 'dot':

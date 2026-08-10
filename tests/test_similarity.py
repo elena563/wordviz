@@ -4,7 +4,7 @@ import numpy as np
 from wordviz.similarity import embedding_distance, n_most_similar, compute_distances
 
 @pytest.mark.parametrize("dist", [
-    "cosine", "euclidean", "manhattan", "chebyshev", "dot", "pearson", "spearman"
+    "cosine", "euclidean", "manhattan",'braycurtis', 'canberra', "chebyshev", "dot", "pearson", "spearman"
 ])
 def test_n_most_similar(loader_static, dist):
     target_word = loader_static.tokens[0]
@@ -28,7 +28,7 @@ def test_n_most_similar_invalid_word(loader_static):
         n_most_similar(loader_static, "nonexistent_word", dist="cosine", n=10)
 
 
-@pytest.mark.parametrize("metric", ["euclidean", "cosine", "manhattan", "chebyshev", "dot", "pearson"])
+@pytest.mark.parametrize("metric", ["euclidean", "cosine", "manhattan", "braycurtis", "canberra", "chebyshev", "dot", "pearson"])
 def test_compute_distances(metric):
     X = np.array([
         [1, 0, 2],

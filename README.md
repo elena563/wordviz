@@ -9,7 +9,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.5.0**
+**version 0.6.0**
 
 Documentation: https://wordviz.readthedocs.io/
 
@@ -24,18 +24,20 @@ Built with:
 
 ## Last Version Updates
 
-### Updated
-- Adapted `map_colors` function to handle both class labels and cluster labels, with appropriate legend labeling. Changed color format to hex for better compatibility with Plotly.
-- Moved optional `classes` parameter to the end of the `load_contextual` method signature for better clarity and usability.
-
 ### Added
-- Added getter and setter for the `classes` property to use it also with static embeddings.
-- Added tests for `map colors` function.
-- All scatter plots now support coloring by class labels if available, with a new `color_by_class` parameter in the plotting functions.
+- Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.
+- New `metric` parameter in `plot_clusters` to select the distance metric for clustering, with default values based on the chosen method.
+- New `ReducedCache` class to manage reduced embeddings for both 2D and 3D visualizations, allowing for more efficient caching, validation and retrieval of reduced embeddings.
+- Added `custom` parameter for `red_method` to use embeddings reduced by external methods, with validation of shape and dimensionality. 
 
 ### Fixed
-- Added default n_neighbors parameter to UMAP dimensionality reduction to avoid errors when the number of samples is less than 15.
-- Fixed `plot_similarity` 3d function, which displayed incorrect target word position.
+- Better error handling in the clustering functions.
+- Removed automatic dimensionality reduction before clustering, reducing coupling between clustering and reduction.
+
+### Updated
+- `compute_distances` now can handle distances between a target embedding and a set of embeddings, reducing complexity from n^3 to n^2. A benchmark test was added to validate the performance improvement.
+- `map_colors` has now a fallback to a default color palette if the number of unique labels exceeds the available colors in the selected theme, ensuring that all labels are assigned a different color.
+- `plot_dendrogram` now supports coloring by cluster if a `n_clusters` to visualize is provided. Together with the threshold line, now all the branches are colored according to the cluster they belong to. 
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 
