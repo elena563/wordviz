@@ -13,6 +13,8 @@
 
 ### Updated
 - `compute_distances` now can handle distances between a target embedding and a set of embeddings, reducing complexity from n^3 to n^2. A benchmark test was added to validate the performance improvement.
+- `map_colors` has now a fallback to a default color palette if the number of unique labels exceeds the available colors in the selected theme, ensuring that all labels are assigned a different color.
+- `plot_dendrogram` now supports coloring by cluster if a `n_clusters` to visualize is provided. Together with the threshold line, now all the branches are colored according to the cluster they belong to. 
 
 ## [0.5.0] - 01/08/2026
 ### Updated

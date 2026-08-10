@@ -156,7 +156,10 @@ class BaseVisualizer:
         colors = self.get_theme(theme)
 
         unique_classes = list(set(labels))
-        palette = sns.color_palette(colors['clusters'], n_colors=len(unique_classes))
+        n = len(unique_classes)
+        palette = sns.color_palette(colors['clusters'], n_colors=n)
+        if len(set(palette)) < n:
+            palette = sns.color_palette('husl', n_colors=n)
         class_to_color = {
             label: '#{:02x}{:02x}{:02x}'.format(int(r*255), int(g*255), int(b*255))
             for label, (r, g, b) in zip(unique_classes, palette)
@@ -734,18 +737,34 @@ class Visualizer(BaseVisualizer):
         node_positions = {}  # {node_id: (angle, radius)}
         leaf_order = {}
 
-        compute_positions(tree, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions, leaf_order)
+        node_leaves = {}
+        compute_positions(tree, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions, leaf_order, node_leaves)
 
         fig, ax = plt.subplots(figsize=(10,10), subplot_kw=dict(projection='polar'))
 
         cluster_colors = None
         if n_clusters is not None:
             labels = fcluster(Z, t=n_clusters, criterion='maxclust')
-            cluster_colors = self.map_colors(labels, theme=theme)  # TODO: map colors is to update
+            mapped_colors, legend_labels = self.map_colors(labels, theme=theme)
+            class_to_color = {}
+            for i, label in enumerate(labels):
+                if label not in class_to_color:
+                    class_to_color[label] = mapped_colors[i]
+            leaf_color = {lid: class_to_color[labels[lid]] for lid in leaf_angles.keys()}
+            
+            node_color = {}
+            for node_id, leaves in node_leaves.items():
+                clusters_in_node = set(labels[lid] for lid in leaves)
+                if len(clusters_in_node) == 1:
+                    node_color[node_id] = class_to_color[clusters_in_node.pop()]
+                else:
+                    node_color[node_id] = 'black'
+            node_color.update(leaf_color)
             cut_distance = Z[-(n_clusters-1), 2]
             threshold_radius = 1.0 - (cut_distance / max_dist)
 
-        draw_tree(tree, ax, node_positions, line_color='black', linewidth=1.0)
+        draw_tree(tree, ax, node_positions, node_color=node_color if n_clusters is not None else None,
+                   line_color='black', linewidth=1.0)
 
         if n_clusters is not None:
             ax.plot(np.linspace(0, 2*np.pi, 100), [threshold_radius]*100,
@@ -774,6 +793,14 @@ class Visualizer(BaseVisualizer):
             ax.set_xticklabels([])
             ax.set_yticklabels([])
             ax.grid(True, alpha=0.3)
+        print("cut_distance:", cut_distance)
+        print("max_dist:", max_dist)
+        print("threshold_radius:", threshold_radius)
+        print("node_color:", node_color)
+        print("labels sample:", labels[:10])
+        print("class_to_color keys:", list(class_to_color.keys()))
+        print("n_clusters:", n_clusters)
+        print("Z ultimi 5 merge:", Z[-5:, 2])
         
         plt.tight_layout()
         return fig, ax
