@@ -9,7 +9,7 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.6.0**
+**version 0.6.1**
 
 Documentation: https://wordviz.readthedocs.io/
 
@@ -24,20 +24,16 @@ Built with:
 
 ## Last Version Updates
 
-### Added
-- Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.
-- New `metric` parameter in `plot_clusters` to select the distance metric for clustering, with default values based on the chosen method.
-- New `ReducedCache` class to manage reduced embeddings for both 2D and 3D visualizations, allowing for more efficient caching, validation and retrieval of reduced embeddings.
-- Added `custom` parameter for `red_method` to use embeddings reduced by external methods, with validation of shape and dimensionality. 
-
 ### Fixed
-- Better error handling in the clustering functions.
-- Removed automatic dimensionality reduction before clustering, reducing coupling between clustering and reduction.
+- Added validation on zip file download to ensure the file is not corrupted before extraction.
+- Moved internal files related functions outside of the `EmbeddingLoader` class to improve modularity and maintainability. Put the new file in `helpers/` together with other helper functions. 
+- Removed internal deprecated glove2word2vec conversion, as GloVe files are now directly loaded in word2vec format.
+- Fixed error in FastText loading when using binary files.
+- Substituted list comprehension in `load_from_file` with gensim .vectors to improve performance.
+- Removed broken GoogleNews pretrained embeddings from the package, as it is no longer available for download. Added a warning to inform users about this change.
 
-### Updated
-- `compute_distances` now can handle distances between a target embedding and a set of embeddings, reducing complexity from n^3 to n^2. A benchmark test was added to validate the performance improvement.
-- `map_colors` has now a fallback to a default color palette if the number of unique labels exceeds the available colors in the selected theme, ensuring that all labels are assigned a different color.
-- `plot_dendrogram` now supports coloring by cluster if a `n_clusters` to visualize is provided. Together with the threshold line, now all the branches are colored according to the cluster they belong to. 
+### Added
+- Tests for loading module, including tests for GloVe, Word2Vec, and FastText loading.
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordviz"
-version = "0.6.0"
+version = "0.6.1"
 description = "A lightweight Python package for loading, analyzing, and visualizing word embeddings."
 authors = ["Elena Zen <elenazen563@gmail.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ include = [
 
 [project]
 name = "wordviz"
-version = "0.6.0"
+version = "0.6.1"
 requires-python = ">=3.11,<3.14" 
 
 [tool.poetry.dependencies]
@@ -45,3 +45,7 @@ sphinx = "^8.2.3"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = ["slow: tests that download/load large pretrained models"]
+addopts = "-m 'not slow'"

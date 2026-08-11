@@ -1,9 +1,16 @@
 # Changelog
 
-## [0.6.1] - Unreleased
+## [0.6.1] - 11/08/2026
 ### Fixed
 - Added validation on zip file download to ensure the file is not corrupted before extraction.
 - Moved internal files related functions outside of the `EmbeddingLoader` class to improve modularity and maintainability. Put the new file in `helpers/` together with other helper functions. 
+- Removed internal deprecated glove2word2vec conversion, as GloVe files are now directly loaded in word2vec format.
+- Fixed error in FastText loading when using binary files.
+- Substituted list comprehension in `load_from_file` with gensim .vectors to improve performance.
+- Removed broken GoogleNews pretrained embeddings from the package, as it is no longer available for download. Added a warning to inform users about this change.
+
+### Added
+- Tests for loading module, including tests for GloVe, Word2Vec, and FastText loading.
 
 ## [0.6.0] - 10/08/2026
 ### Added
