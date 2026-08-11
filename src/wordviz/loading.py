@@ -3,6 +3,7 @@ from gensim.models import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 from  gensim.models.fasttext import load_facebook_model
 import json
+import warnings
 import numpy as np
 
 import logging
@@ -84,7 +85,6 @@ class EmbeddingLoader:
 
         Notes:
         ------
-        - For GloVe files, they are first converted to word2vec format.
         - FastText binary files are supported via Facebook's native loader.
         - Loaded tokens are stored in self.tokens.
         - Embedding matrix is stored in self.embeddings.
@@ -97,25 +97,17 @@ class EmbeddingLoader:
                     self.embeddings_raw = KeyedVectors.load_word2vec_format(path, binary=binary)
             case 'fasttext':
                 if binary:
-                    self.embeddings_raw = load_facebook_model(path)
+                    self.embeddings_raw = load_facebook_model(path).wv
                 else:
                     self.embeddings_raw = KeyedVectors.load_word2vec_format(path, binary=False)
             case 'glove':
-                cache_dir = get_cache_dir()
-                glove_path = cache_dir / "glove_w2v.txt"
-                try:
-                    glove2word2vec(path, str(glove_path))
-                except Exception as e:
-                    raise RuntimeError(f"GloVe to Word2Vec conversion failed: {e}")
-                
-                self.embeddings_raw = KeyedVectors.load_word2vec_format(str(glove_path), binary=False)
+                self.embeddings_raw = KeyedVectors.load_word2vec_format(path, binary=False, no_header=True)
 
         self.tokens = list(self.embeddings_raw.index_to_key)
         self.dimension = self.embeddings_raw.vector_size
         self.type = 'word'
 
-        words = self.embeddings_raw.index_to_key
-        self.embeddings = np.array([self.embeddings_raw.get_vector(word) for word in words])
+        self.embeddings = self.embeddings_raw.vectors
         logger.info("Embedding loaded from file")
 
         return self.embeddings
@@ -127,7 +119,7 @@ class EmbeddingLoader:
         Parameters
         -----------
         model : str
-            Name of the embedding model ('word2vec', 'fasttext', etc.).
+            Name of the embedding model ('glove' or 'fasttext').
         lang : str
             Language code of the embedding ('en', 'it').
         source : str
@@ -154,6 +146,8 @@ class EmbeddingLoader:
         if option is not None:
             url = option['url']
             filename = option['filename']
+        elif model == 'word2vec' and lang == 'en' and source == 'googlenews' and dimension == '300d':
+            warnings.warn("The Google News pretrained embeddings are no longer available for download. Please provide a local file path to load them or choose a different pretrained.")
         else:
             raise ValueError(f"Can't find pretrained file with parameters: {model}, {lang}, {source}, {dimension}")
         zip_filename = url.split("/")[-1]
@@ -165,7 +159,7 @@ class EmbeddingLoader:
         file_path = dest_dir / filename
 
         if not file_path.exists():
-            extract_archive(zip_path, dest_dir, filename)
+            extract_archive(zip_path, filename, dest_dir)
 
         self.embeddings = self.load_from_file(file_path, model)
 

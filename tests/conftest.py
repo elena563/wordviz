@@ -2,6 +2,9 @@ import os
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
+from gensim.models import KeyedVectors, FastText
+from gensim.models.fasttext import save_facebook_model
+
 import pytest
 from wordviz import EmbeddingLoader, Visualizer, Visualizer3D
 
@@ -39,3 +42,38 @@ def vis(loader):
 @pytest.fixture(scope='session')
 def vis3d(loader):
     return Visualizer3D(loader)
+
+
+@pytest.fixture(scope='session')
+def word2vec_bin_file(tmp_path_factory):
+    kv = KeyedVectors(vector_size=5)
+    kv.add_vectors(
+        ['hello', 'world', 'embedding', 'test'],
+        np.random.default_rng(42).normal(size=(4, 5)).astype(np.float32),
+    )
+    path = tmp_path_factory.mktemp('word2vec') / 'model.bin'
+    kv.save_word2vec_format(str(path), binary=True)
+    return path
+
+@pytest.fixture(scope='session')
+def glove_txt_file(tmp_path_factory):
+    rng = np.random.default_rng(42)
+    words = ['hello', 'world', 'embedding', 'test']
+    path = tmp_path_factory.mktemp('glove') / 'glove.txt'
+    with open(path, 'w') as f:
+        for word in words:
+            f.write(word + ' ' + ' '.join(f'{x:.6f}' for x in rng.normal(size=5)) + '\n')
+    return path
+
+@pytest.fixture(scope='session')
+def fasttext_bin_file(tmp_path_factory):
+    sentences = [
+        ['hello', 'world', 'embedding', 'test'],
+        ['another', 'sentence', 'hello', 'world'],
+    ]
+    model = FastText(vector_size=5, min_count=1, window=3, seed=42)
+    model.build_vocab(corpus_iterable=sentences)
+    model.train(corpus_iterable=sentences, total_examples=len(sentences), epochs=5)
+    path = tmp_path_factory.mktemp('fasttext') / 'model.bin'
+    save_facebook_model(model, str(path))
+    return path

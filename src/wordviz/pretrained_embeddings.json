@@ -15,7 +15,6 @@
     ["glove", "en", "twitter", "25d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.25d.txt"],
     ["glove", "en", "twitter", "50d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.50d.txt"],
     ["glove", "en", "twitter", "100d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.100d.txt"],
-    ["glove", "en", "twitter", "200d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.200d.txt"],
-    ["glove", "en", "googlenews", "300d", "https://figshare.com/ndownloader/files/41403483", "GoogleNews-vectors-negative300.bin"]
+    ["glove", "en", "twitter", "200d", "https://nlp.stanford.edu/data/glove.twitter.27B.zip", "glove.twitter.27B.200d.txt"]
   ]
 }
