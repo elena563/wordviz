@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1] - Unreleased
+### Fixed
+- Added validation on zip file download to ensure the file is not corrupted before extraction.
+- Moved internal files related functions outside of the `EmbeddingLoader` class to improve modularity and maintainability. Put the new file in `helpers/` together with other helper functions. 
+
 ## [0.6.0] - 10/08/2026
 ### Added
 - Added HDBSCAN and Gaussian Mixture Model (GMM) clustering methods to the `plot_clusters` function.

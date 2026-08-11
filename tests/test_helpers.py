@@ -2,7 +2,7 @@ from scipy.cluster.hierarchy import linkage, to_tree
 from unittest.mock import Mock
 import numpy as np
 
-from wordviz.dendrogram_helpers import compute_positions, draw_tree
+from wordviz.helpers.dendrogram_helpers import compute_positions, draw_tree
 
 X = np.array([[0, 0], [1, 0], [5, 0], [6, 0]])
 Z = linkage(X, method='complete')

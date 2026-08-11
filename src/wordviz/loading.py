@@ -1,16 +1,14 @@
 import os
-import shutil
 from gensim.models import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 from  gensim.models.fasttext import load_facebook_model
 import json
 import numpy as np
-import zipfile
-from pathlib import Path
-import urllib.request
 
 import logging
 logger = logging.getLogger(__name__)
+
+from wordviz.helpers.files_helpers import download_file, validate_file, get_cache_dir, extract_archive, export_embedding
 
 class EmbeddingLoader:
     """
@@ -60,39 +58,12 @@ class EmbeddingLoader:
                     f"'classes' length ({len(value)}) must match number of tokens ({len(self.tokens)})"
                 )
         self._classes = value
-            
-    def get_cache_dir(self) -> Path:
-        cache_dir = Path.home() / ".wordviz_cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir   
     
     def _require_loaded(self, check_tokens=False) -> None:
         if self.embeddings is None:
             raise ValueError("No embeddings loaded. Call load_from_file() or load_contextual() first.")
         if check_tokens and self.tokens is None:
             raise ValueError("No tokens loaded. Call load_from_file() or load_contextual() first.")
-
-    def _validate_file(self, path: str) -> bool:
-        '''checks if path argument leads to a valid file name and returns if it is binary'''
-        valid_ext = ['.bin', '.txt', '.vec']
-
-        if path is None:
-            raise ValueError('File path is required')
-        if not isinstance(path, (str, os.PathLike)):
-            raise TypeError('The file path must be a string')    
-
-        path = Path(path)
-        
-        if not path.exists():
-            raise FileNotFoundError(f"Invalid file path {path}: the file does not exist")
-
-        ext = path.suffix.lower()
-        if ext == '.gz' or ext == '.zip':
-            raise ValueError(f'Compressed files are not supported. Please extract the file first.')
-        if ext not in valid_ext:
-            raise ValueError(f"Invalid file extension {ext}. Valid extensions are: {','.join(valid_ext)}")
-
-        return ext == '.bin'
 
 
     def load_from_file(self, path: str, format: str) -> np.ndarray:
@@ -119,7 +90,7 @@ class EmbeddingLoader:
         - Embedding matrix is stored in self.embeddings.
         '''
 
-        binary = self._validate_file(path)
+        binary = validate_file(path)
 
         match format:
             case 'word2vec':
@@ -130,7 +101,7 @@ class EmbeddingLoader:
                 else:
                     self.embeddings_raw = KeyedVectors.load_word2vec_format(path, binary=False)
             case 'glove':
-                cache_dir = self.get_cache_dir() 
+                cache_dir = get_cache_dir()
                 glove_path = cache_dir / "glove_w2v.txt"
                 try:
                     glove2word2vec(path, str(glove_path))
@@ -148,27 +119,6 @@ class EmbeddingLoader:
         logger.info("Embedding loaded from file")
 
         return self.embeddings
-    
-
-    def download_zip(self, url: str, filename: str) -> Path:
-        '''downloads zip file from url'''
-        zip_path = self.get_cache_dir() / filename
-        if not zip_path.exists():
-            logger.info(f"Downloading {filename}...")
-            urllib.request.urlretrieve(url, zip_path)
-        else:
-            logger.info(f"{filename} already exists in cache.")
-        return zip_path
-    
-
-    def export_embedding(self, source_path, dest_folder):
-        '''saves locally pretrained embeddings file'''
-        os.makedirs(dest_folder, exist_ok=True)
-        filename = os.path.basename(source_path)
-        dest_path = os.path.join(dest_folder, filename)
-        shutil.copy(source_path, dest_path)
-        logger.info(f"File saved in {dest_path}.")
-
 
     def load_pretrained(self, model: str, lang: str, source: str, dimension: str, save_file: bool = False, export_dir: str = None) -> np.ndarray:
         '''
@@ -208,23 +158,21 @@ class EmbeddingLoader:
             raise ValueError(f"Can't find pretrained file with parameters: {model}, {lang}, {source}, {dimension}")
         zip_filename = url.split("/")[-1]
 
-        zip_path = self.download_zip(url, zip_filename)
+        zip_path = download_file(url, zip_filename)
 
-        dest_dir = self.get_cache_dir() / model / lang / source / dimension
+        dest_dir = get_cache_dir() / model / lang / source / dimension
         dest_dir.mkdir(parents=True, exist_ok=True)
         file_path = dest_dir / filename
 
         if not file_path.exists():
-            with zipfile.ZipFile(zip_path, 'r') as z:
-                logger.info(f"Extracting {filename}...")
-                z.extract(filename, path=dest_dir)
+            extract_archive(zip_path, dest_dir, filename)
 
         self.embeddings = self.load_from_file(file_path, model)
 
         if save_file:
-                if export_dir is None:
-                    raise ValueError("Must specify export_dir to save file.")
-                self.export_embedding(file_path, export_dir)
+            if export_dir is None:
+                raise ValueError("Must specify export_dir to save file.")
+            export_embedding(file_path, export_dir)
 
         return self.embeddings
     

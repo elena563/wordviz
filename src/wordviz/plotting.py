@@ -14,7 +14,7 @@ import warnings
 from .clustering import create_clusters
 from .dim_reduction import reduce_dim, ReducedCache
 from .similarity import n_most_similar, compute_distances
-from .dendrogram_helpers import compute_positions, draw_tree
+from .helpers.dendrogram_helpers import compute_positions, draw_tree
 
 
 class BaseVisualizer:
