@@ -1,11 +1,10 @@
 import gzip
+import logging
 import os
 import shutil
 import urllib.request
 import zipfile
 from pathlib import Path
-
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
-from scipy.cluster.hierarchy import linkage, to_tree
 from unittest.mock import Mock
+
 import numpy as np
+from scipy.cluster.hierarchy import linkage, to_tree
 
 from wordviz.helpers.dendrogram_helpers import compute_positions, draw_tree
 

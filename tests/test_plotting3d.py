@@ -1,6 +1,6 @@
-from matplotlib import pyplot as plt
 import plotly.graph_objects as go
 import pytest
+from matplotlib import pyplot as plt
 
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])

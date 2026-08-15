@@ -1,11 +1,12 @@
+# ruff: noqa: E402
 from wordviz._optional import require
 
 require("encoding")
 
-from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer, AutoModel
-import torch
 import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer
+from transformers import AutoModel, AutoTokenizer
 
 
 def encode_sentences(sentences, model="all-MiniLM-L6-v2", device="cpu"):

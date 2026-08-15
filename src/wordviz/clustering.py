@@ -1,13 +1,12 @@
 import numpy as np
-from sklearn.cluster import KMeans, DBSCAN, HDBSCAN
+from scipy.cluster.hierarchy import fcluster, linkage
+from sklearn.cluster import DBSCAN, HDBSCAN, KMeans
 from sklearn.mixture import GaussianMixture
-from typing import Tuple, Optional
-from scipy.cluster.hierarchy import linkage, fcluster
 
 
 def create_clusters(
     vectors: np.ndarray, n_clusters: int = 5, method: str = "kmeans", metric: str = None
-) -> Tuple[np.ndarray, Optional[np.ndarray], np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray | None, np.ndarray]:
     """
     Performs clustering on embeddings for visualization purposes.
 

@@ -1,16 +1,9 @@
-import numpy as np
-from scipy.spatial.distance import (
-    cityblock,
-    euclidean,
-    cosine,
-    chebyshev,
-    canberra,
-    braycurtis,
-)
-from scipy.stats import pearsonr, spearmanr
-from sklearn.metrics import pairwise_distances
-from typing import List, Tuple
 import warnings
+
+import numpy as np
+from scipy.stats import spearmanr
+from sklearn.metrics import pairwise_distances
+
 from wordviz.loading import EmbeddingLoader
 
 
@@ -125,7 +118,7 @@ def n_most_similar(
     all_indices = []
 
     for i in range(0, len(filtered_embeddings), batch_size):
-        batch_words = filtered_words[i : i + batch_size]
+        # batch_words = filtered_words[i : i + batch_size]
         batch_vectors = filtered_embeddings[i : i + batch_size]
 
         distances = compute_distances(batch_vectors, metric=dist, target=target_vector)

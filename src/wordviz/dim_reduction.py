@@ -1,11 +1,10 @@
-from wordviz._optional import require
+import warnings
 
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.manifold import Isomap
-from sklearn.manifold import MDS
-import warnings
+from sklearn.manifold import MDS, TSNE, Isomap
+
+from wordviz._optional import require
 
 SUPPORTED_METHODS = ("pca", "tsne", "umap", "isomap", "mds")
 

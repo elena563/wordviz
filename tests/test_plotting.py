@@ -1,7 +1,8 @@
-from matplotlib import pyplot as plt
-import plotly.graph_objects as go
 import re
+
+import plotly.graph_objects as go
 import pytest
+from matplotlib import pyplot as plt
 
 
 def test_map_colors(vis, loader):

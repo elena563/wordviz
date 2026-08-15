@@ -1,8 +1,9 @@
 import time
+
 import numpy as np
+
 from wordviz import EmbeddingLoader
 from wordviz.similarity import compute_distances, n_most_similar
-import wordviz.similarity
 
 
 # old function

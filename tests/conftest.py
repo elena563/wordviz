@@ -1,12 +1,13 @@
 import os
-import numpy as np
+
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
-from gensim.models import KeyedVectors, FastText
+import pytest
+from gensim.models import FastText, KeyedVectors
 from gensim.models.fasttext import save_facebook_model
 
-import pytest
 from wordviz import EmbeddingLoader, Visualizer, Visualizer3D
 
 

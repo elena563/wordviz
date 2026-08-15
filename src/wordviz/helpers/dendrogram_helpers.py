@@ -1,7 +1,8 @@
-import numpy as np
-from scipy.cluster.hierarchy import ClusterNode
-from matplotlib import pyplot as plt
 from collections.abc import Mapping
+
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.cluster.hierarchy import ClusterNode
 
 
 def compute_positions(

@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
+import pytest
 
-from wordviz.similarity import embedding_distance, n_most_similar, compute_distances
+from wordviz.similarity import compute_distances, embedding_distance, n_most_similar
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,6 @@ def test_n_most_similar(loader_static, dist):
     assert len(distances) == n
 
     for j, word in enumerate(words):
-        i = loader_static.tokens.index(word)
         assert word in loader_static.tokens
         assert word != target_word
         assert np.array_equal(vectors[j], loader_static.get_embedding(word))

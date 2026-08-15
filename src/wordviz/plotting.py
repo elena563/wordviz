@@ -1,20 +1,22 @@
-import os
 import json
-from adjustText import adjust_text
+import os
+import warnings
+
 import matplotlib.pyplot as plt
-from matplotlib.colors import is_color_like, to_rgb
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
-from sklearn.cluster import KMeans
+from adjustText import adjust_text
+from matplotlib.colors import is_color_like, to_rgb
+from scipy.cluster.hierarchy import fcluster, linkage, to_tree
 from scipy.stats import gaussian_kde
-from scipy.cluster.hierarchy import linkage, dendrogram, fcluster, to_tree
-import warnings
+from sklearn.cluster import KMeans
+
 from .clustering import create_clusters
-from .dim_reduction import reduce_dim, ReducedCache
-from .similarity import n_most_similar, compute_distances
+from .dim_reduction import ReducedCache, reduce_dim
 from .helpers.dendrogram_helpers import compute_positions, draw_tree
+from .similarity import compute_distances, n_most_similar
 
 
 class BaseVisualizer:
@@ -194,9 +196,7 @@ class BaseVisualizer:
         if len(set(palette)) < n:
             palette = sns.color_palette("husl", n_colors=n)
         class_to_color = {
-            label: "#{:02x}{:02x}{:02x}".format(
-                int(r * 255), int(g * 255), int(b * 255)
-            )
+            label: f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
             for label, (r, g, b) in zip(unique_classes, palette)
         }
         mapped_colors = [class_to_color[label] for label in labels]
@@ -352,7 +352,7 @@ class Visualizer(BaseVisualizer):
         )
         target_vec = self.loader.get_embedding(target_word)
         vectors = np.vstack([target_vec.reshape(1, -1), similar_vecs])
-        words = [target_word] + similar_words
+        # words = [target_word] + similar_words
 
         reduced_emb = reduce_dim(vectors, method=red_method)
         target_reduced = reduced_emb[0]
@@ -603,7 +603,7 @@ class Visualizer(BaseVisualizer):
 
         if emb.shape[0] > 500:
             warnings.warn(
-                f"Warning: loading more than 500 embeddings without subsetting will generate more than one heatmap and may result in longer execution times. Consider subsetting before or setting n < 500."
+                "Warning: loading more than 500 embeddings without subsetting will generate more than one heatmap and may result in longer execution times. Consider subsetting before or setting n < 500."
             )
 
         distances = compute_distances(emb, metric=dist)
@@ -974,7 +974,6 @@ class Visualizer(BaseVisualizer):
 
         fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection="polar"))
 
-        cluster_colors = None
         if n_clusters is not None:
             labels = fcluster(Z, t=n_clusters, criterion="maxclust")
             mapped_colors, legend_labels = self.map_colors(labels, theme=theme)
@@ -1032,7 +1031,7 @@ class Visualizer(BaseVisualizer):
             )
 
         ax.set_title(
-            title or f"Word Embedding Dendrogram", fontsize=12, fontweight="bold"
+            title or "Word Embedding Dendrogram", fontsize=12, fontweight="bold"
         )
         ax.set_ylim(0, label_distance + 0.05)
         ax.set_theta_zero_location("N")

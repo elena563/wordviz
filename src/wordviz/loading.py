@@ -1,22 +1,21 @@
-import os
-from gensim.models import KeyedVectors
-from gensim.scripts.glove2word2vec import glove2word2vec
-from gensim.models.fasttext import load_facebook_model
 import json
-import warnings
-import numpy as np
-
 import logging
+import os
+import warnings
 
-logger = logging.getLogger(__name__)
+import numpy as np
+from gensim.models import KeyedVectors
+from gensim.models.fasttext import load_facebook_model
 
 from wordviz.helpers.files_helpers import (
     download_file,
-    validate_file,
-    get_cache_dir,
-    extract_archive,
     export_embedding,
+    extract_archive,
+    get_cache_dir,
+    validate_file,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingLoader:

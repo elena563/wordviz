@@ -1,6 +1,7 @@
 import numpy as np
-from pytest import FixtureRequest
 import pytest
+from pytest import FixtureRequest
+
 from wordviz import EmbeddingLoader
 
 

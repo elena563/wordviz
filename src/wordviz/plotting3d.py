@@ -1,13 +1,14 @@
-from adjustText import adjust_text
+import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import warnings
-from .plotting import BaseVisualizer
+
 from .clustering import create_clusters
-from .dim_reduction import reduce_dim, ReducedCache
+from .dim_reduction import ReducedCache, reduce_dim
+from .plotting import BaseVisualizer
 from .similarity import n_most_similar
 
 
@@ -385,7 +386,7 @@ class Visualizer3D(BaseVisualizer):
             grid=grid,
             tokens=tokens,
             title=title,
-            def_title=f"3D Clustering Scatterplot",
+            def_title="3D Clustering Scatterplot",
             labels=clusters,
             for_clustering=True,
         )

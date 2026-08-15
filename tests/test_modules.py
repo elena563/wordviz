@@ -1,8 +1,7 @@
-import pytest
 import numpy as np
-from matplotlib import pyplot as plt
+import pytest
 
-from wordviz.dim_reduction import reduce_dim, ReducedCache
+from wordviz.dim_reduction import ReducedCache, reduce_dim
 
 
 def test_reduce_dim_output_shape(sample_embeddings):
