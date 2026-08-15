@@ -4,43 +4,48 @@ from matplotlib import pyplot as plt
 
 from wordviz.dim_reduction import reduce_dim, ReducedCache
 
+
 def test_reduce_dim_output_shape(sample_embeddings):
-    reduced = reduce_dim(sample_embeddings, method='pca', n_dimensions=2)
+    reduced = reduce_dim(sample_embeddings, method="pca", n_dimensions=2)
     assert reduced.shape == (len(sample_embeddings), 2)
 
+
 def test_reduce_dim_all_methods(sample_embeddings):
-    for method in ['pca', 'tsne', 'umap', 'isomap', 'mds']:
+    for method in ["pca", "tsne", "umap", "isomap", "mds"]:
         reduced = reduce_dim(sample_embeddings, method=method, n_dimensions=2)
         assert reduced.shape[1] == 2
         assert not np.isnan(reduced).any()
         assert not np.isinf(reduced).any()
 
+
 def test_reduce_dim_invalid_method(sample_embeddings):
     with pytest.raises(ValueError):
-        reduce_dim(sample_embeddings, method='nonexistent', n_dimensions=2)
+        reduce_dim(sample_embeddings, method="nonexistent", n_dimensions=2)
+
 
 def test_reduce_dim_preserves_samples(sample_embeddings):
-    reduced = reduce_dim(sample_embeddings, method='pca', n_dimensions=2)
+    reduced = reduce_dim(sample_embeddings, method="pca", n_dimensions=2)
     assert reduced.shape[0] == sample_embeddings.shape[0]
 
 
 def test_reduced_cache():
     cache = ReducedCache(2)
-    cache['pca'] = np.zeros((5, 2))
-    cache['custom'] = np.zeros((5, 2))
-    assert 'pca' in cache
-    assert 'custom' in cache
+    cache["pca"] = np.zeros((5, 2))
+    cache["custom"] = np.zeros((5, 2))
+    assert "pca" in cache
+    assert "custom" in cache
 
     with pytest.raises(ValueError):
-        cache['custom'] = np.zeros((5, 3))
+        cache["custom"] = np.zeros((5, 3))
 
     with pytest.raises(ValueError):
-        cache['foo'] = np.zeros((5, 2))
+        cache["foo"] = np.zeros((5, 2))
 
     cache3 = ReducedCache(3)
-    cache3['custom'] = np.zeros((5, 3))
-    assert 'custom' in cache3
+    cache3["custom"] = np.zeros((5, 3))
+    assert "custom" in cache3
+
 
 def test_missing_custom_reduction(vis):
     with pytest.raises(ValueError):
-        vis.plot_embeddings(red_method='custom')    # 'custom' is not defined in the cache
+        vis.plot_embeddings(red_method="custom")  # 'custom' is not defined in the cache

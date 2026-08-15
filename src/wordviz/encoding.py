@@ -1,4 +1,5 @@
 from wordviz._optional import require
+
 require("encoding")
 
 from sentence_transformers import SentenceTransformer
@@ -6,10 +7,11 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
 
-def encode_sentences(sentences, model='all-MiniLM-L6-v2', device='cpu'):
+
+def encode_sentences(sentences, model="all-MiniLM-L6-v2", device="cpu"):
     """
     Encodes a list of sentences into embeddings.
-    
+
     Parameters
     -----------
     sentences : list of str
@@ -38,33 +40,42 @@ def encode_sentences(sentences, model='all-MiniLM-L6-v2', device='cpu'):
         - 'dimensions' : int
             Embedding vector size.
     """
-    
+
     st_model = SentenceTransformer(model, device=device)
     embeddings = st_model.encode(sentences, convert_to_numpy=True)
-    
+
     return {
-        'embeddings': embeddings,
-        'labels': sentences,
-        'type': 'sentence', 
-        'model': model,
-        'dimensions': embeddings.shape[1]
+        "embeddings": embeddings,
+        "labels": sentences,
+        "type": "sentence",
+        "model": model,
+        "dimensions": embeddings.shape[1],
     }
+
 
 def _find_word_position(target_word, sentence, tokenizer):
     """Finds word position in tokenized sentence"""
     tokens = tokenizer.tokenize(sentence.lower())
     target_tokens = tokenizer.tokenize(target_word.lower())
-    
+
     # first occurrence
     for i in range(len(tokens) - len(target_tokens) + 1):
-        if tokens[i:i+len(target_tokens)] == target_tokens:
-            return i + 1 
+        if tokens[i : i + len(target_tokens)] == target_tokens:
+            return i + 1
     return None
 
-def encode_word_contexts(target_word: str, sentences: list, match: str ='exact', occurrencies: str ='first', model: str ='distilbert-base-uncased', device: str ='auto'):
+
+def encode_word_contexts(
+    target_word: str,
+    sentences: list,
+    match: str = "exact",
+    occurrencies: str = "first",
+    model: str = "distilbert-base-uncased",
+    device: str = "auto",
+):
     """
     Encodes a word into contextual embeddings based on the sentence.
-    
+
     Parameters
     -----------
     target_word: str
@@ -99,41 +110,43 @@ def encode_word_contexts(target_word: str, sentences: list, match: str ='exact',
         - 'dimensions' : int
             Embedding vector size.
     """
-    
+
     tokenizer = AutoTokenizer.from_pretrained(model)
     encoding_model = AutoModel.from_pretrained(model)
-    
-    if device == 'auto':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    if device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     encoding_model.to(device)
-    
+
     word_embeddings = []
     valid_sentences = []
-    
+
     for sentence in sentences:
         word_pos = _find_word_position(target_word, sentence, tokenizer)
         if word_pos is None:
             continue  # skip if word is not found
-            
-        inputs = tokenizer(sentence, return_tensors='pt', truncation=True, max_length=512)
+
+        inputs = tokenizer(
+            sentence, return_tensors="pt", truncation=True, max_length=512
+        )
         inputs = {k: v.to(device) for k, v in inputs.items()}
-        
+
         with torch.no_grad():
             outputs = encoding_model(**inputs)
-            
+
         word_emb = outputs.last_hidden_state[0][word_pos].cpu().numpy()
         word_embeddings.append(word_emb)
         valid_sentences.append(sentence)
-    
+
     embeddings = np.array(word_embeddings)
     labels = [f"{target_word}_ctx_{i}" for i in range(len(valid_sentences))]
-    
+
     return {
-        'embeddings': embeddings,
-        'labels': labels,
-        'type': 'word_context',
-        'target_word': target_word,
-        'sentences': valid_sentences,
-        'model': model,
-        'dimensions': embeddings.shape[1]
+        "embeddings": embeddings,
+        "labels": labels,
+        "type": "word_context",
+        "target_word": target_word,
+        "sentences": valid_sentences,
+        "model": model,
+        "dimensions": embeddings.shape[1],
     }

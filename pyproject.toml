@@ -46,6 +46,17 @@ sphinx = "^8.2.3"
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"] 
+ignore = ["E501"]                
+
+[tool.ruff.format]
+quote-style = "double"
+
 [tool.pytest.ini_options]
 markers = ["slow: tests that download/load large pretrained models"]
 addopts = "-m 'not slow'"

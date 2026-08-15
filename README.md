@@ -78,7 +78,7 @@ You can load and manage embeddings though the `EmbeddingLoader` class, and then 
 from wordviz import EmbeddingLoader, Visualizer
 
 loader = EmbeddingLoader()
-loader.load_from_file('path/to/your/embedding/file', 'word2vec')
+loader.load_from_file("path/to/your/embedding/file", "word2vec")
 
 vis = Visualizer(loader)
 vis.plot_embeddings()

@@ -3,7 +3,17 @@ from scipy.cluster.hierarchy import ClusterNode
 from matplotlib import pyplot as plt
 from collections.abc import Mapping
 
-def compute_positions(node: ClusterNode, leaf_counter: list[int], n_leaves: int, max_dist: float, leaf_angles: dict[int, float], node_positions: dict[int, tuple[float, float]], leaf_order: dict[int, int], node_leaves: dict[int, list[int]]) -> list[int]:
+
+def compute_positions(
+    node: ClusterNode,
+    leaf_counter: list[int],
+    n_leaves: int,
+    max_dist: float,
+    leaf_angles: dict[int, float],
+    node_positions: dict[int, tuple[float, float]],
+    leaf_order: dict[int, int],
+    node_leaves: dict[int, list[int]],
+) -> list[int]:
     """
     Recursively computes the angular and radial positions of each node in the dendrogram.
     Updates leaf_angles and node_positions dictionaries with the computed values.
@@ -16,49 +26,93 @@ def compute_positions(node: ClusterNode, leaf_counter: list[int], n_leaves: int,
         leaf_counter[0] += 1
         return [node.id]
     else:
-        left_leaves = compute_positions(node.left, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions, leaf_order, node_leaves)
-        right_leaves = compute_positions(node.right, leaf_counter, n_leaves, max_dist, leaf_angles, node_positions, leaf_order, node_leaves)
+        left_leaves = compute_positions(
+            node.left,
+            leaf_counter,
+            n_leaves,
+            max_dist,
+            leaf_angles,
+            node_positions,
+            leaf_order,
+            node_leaves,
+        )
+        right_leaves = compute_positions(
+            node.right,
+            leaf_counter,
+            n_leaves,
+            max_dist,
+            leaf_angles,
+            node_positions,
+            leaf_order,
+            node_leaves,
+        )
 
         all_leaves = left_leaves + right_leaves
-        node_leaves[node.id] = all_leaves 
+        node_leaves[node.id] = all_leaves
         angles = [leaf_angles[lid] for lid in all_leaves]
-        
+
         angles_sorted = sorted(angles)
         if angles_sorted[-1] - angles_sorted[0] > np.pi:
-            gaps = [(angles_sorted[i+1] - angles_sorted[i], i) 
-                    for i in range(len(angles_sorted)-1)]
-            gaps.append((2*np.pi - angles_sorted[-1] + angles_sorted[0], len(angles_sorted)-1))
+            gaps = [
+                (angles_sorted[i + 1] - angles_sorted[i], i)
+                for i in range(len(angles_sorted) - 1)
+            ]
+            gaps.append(
+                (
+                    2 * np.pi - angles_sorted[-1] + angles_sorted[0],
+                    len(angles_sorted) - 1,
+                )
+            )
             max_gap, gap_idx = max(gaps)
-            
-            threshold = (angles_sorted[gap_idx] + max_gap/2) % (2*np.pi)
-            angles_adjusted = [(a + 2*np.pi if a < threshold else a) for a in angles]
+
+            threshold = (angles_sorted[gap_idx] + max_gap / 2) % (2 * np.pi)
+            angles_adjusted = [(a + 2 * np.pi if a < threshold else a) for a in angles]
             mean_angle = np.mean(angles_adjusted) % (2 * np.pi)
         else:
             mean_angle = np.mean(angles)
-        
-        radius = 1.0 - (node.dist / max_dist if max_dist > 0 else 0) # radius is inversely proportional to distance from root
+
+        radius = 1.0 - (
+            node.dist / max_dist if max_dist > 0 else 0
+        )  # radius is inversely proportional to distance from root
         node_positions[node.id] = (mean_angle, radius)
         return all_leaves
-    
 
-def draw_tree(node: ClusterNode, ax: plt.Axes, node_positions: Mapping[int, tuple[float, float]], node_color: dict[int, str] = None, line_color: str='black', linewidth: float=1.0):
+
+def draw_tree(
+    node: ClusterNode,
+    ax: plt.Axes,
+    node_positions: Mapping[int, tuple[float, float]],
+    node_color: dict[int, str] = None,
+    line_color: str = "black",
+    linewidth: float = 1.0,
+):
     """Recursively draws the branches of the dendrogram."""
     if not node.is_leaf():
         _, parent_radius = node_positions[node.id]
-        
+
         left_angle, left_radius = node_positions[node.left.id]
         right_angle, right_radius = node_positions[node.right.id]
-        
-        for child_node, (child_angle, child_radius) in [(node.left, (left_angle, left_radius)), (node.right, (right_angle, right_radius))]:
-            child_color = node_color.get(child_node.id, line_color) if node_color else line_color
-            ax.plot([child_angle, child_angle], [parent_radius, child_radius],
-                    color=child_color, linewidth=linewidth, zorder=1)
-        
+
+        for child_node, (child_angle, child_radius) in [
+            (node.left, (left_angle, left_radius)),
+            (node.right, (right_angle, right_radius)),
+        ]:
+            child_color = (
+                node_color.get(child_node.id, line_color) if node_color else line_color
+            )
+            ax.plot(
+                [child_angle, child_angle],
+                [parent_radius, child_radius],
+                color=child_color,
+                linewidth=linewidth,
+                zorder=1,
+            )
+
         if left_angle != right_angle:
             if abs(right_angle - left_angle) > np.pi:
                 greater_angle = max(left_angle, right_angle)
                 smaller_angle = min(left_angle, right_angle)
-                arc_angles_1 = np.linspace(smaller_angle, 2*np.pi, 30)
+                arc_angles_1 = np.linspace(smaller_angle, 2 * np.pi, 30)
                 arc_angles_2 = np.linspace(0, greater_angle, 30)
 
                 arc = np.concatenate([arc_angles_1, [np.nan], arc_angles_2])
@@ -67,8 +121,16 @@ def draw_tree(node: ClusterNode, ax: plt.Axes, node_positions: Mapping[int, tupl
                 end_angle = max(left_angle, right_angle)
                 arc = np.linspace(start_angle, end_angle, 50)
 
-            arc_color = node_color.get(node.id, line_color) if node_color else line_color
-            ax.plot(arc, [parent_radius]*len(arc), color=arc_color, linewidth=linewidth, zorder=1)
-        
+            arc_color = (
+                node_color.get(node.id, line_color) if node_color else line_color
+            )
+            ax.plot(
+                arc,
+                [parent_radius] * len(arc),
+                color=arc_color,
+                linewidth=linewidth,
+                zorder=1,
+            )
+
         draw_tree(node.left, ax, node_positions, node_color, line_color, linewidth)
         draw_tree(node.right, ax, node_positions, node_color, line_color, linewidth)

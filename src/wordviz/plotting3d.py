@@ -13,73 +13,98 @@ from .similarity import n_most_similar
 
 class Visualizer3D(BaseVisualizer):
     def __init__(self, loader):
-        super().__init__(loader) 
+        super().__init__(loader)
         self.reduced: dict[str, np.ndarray] = ReducedCache(dims=3)
         self.reduced_subset = None
 
-    def _setup_3d(self, reduced_emb, theme, grid, tokens, title, def_title, labels=None, for_clustering=False):
-        '''base private function to config plotly 3d plot'''
-        df = pd.DataFrame(reduced_emb, columns=['x', 'y', 'z'])
+    def _setup_3d(
+        self,
+        reduced_emb,
+        theme,
+        grid,
+        tokens,
+        title,
+        def_title,
+        labels=None,
+        for_clustering=False,
+    ):
+        """base private function to config plotly 3d plot"""
+        df = pd.DataFrame(reduced_emb, columns=["x", "y", "z"])
 
         style = self.get_theme(theme)
         kwargs = {}
         if labels is not None:
-            _, legend_labels  = self.map_colors(labels, theme, cluster_mode=for_clustering)
+            _, legend_labels = self.map_colors(
+                labels, theme, cluster_mode=for_clustering
+            )
 
-            df['name'] = [legend_labels[label][1] for label in labels]
+            df["name"] = [legend_labels[label][1] for label in labels]
 
             color_discrete_map = {
                 legend_labels[label][1]: legend_labels[label][0]
                 for label in legend_labels
             }
 
-            kwargs['color'] = 'name'
-            kwargs['color_discrete_map'] = color_discrete_map
+            kwargs["color"] = "name"
+            kwargs["color_discrete_map"] = color_discrete_map
         else:
-            kwargs['color_discrete_sequence'] = [style['points']]
+            kwargs["color_discrete_sequence"] = [style["points"]]
 
-        fig = px.scatter_3d(df, x='x', y='y', z='z',**kwargs)
+        fig = px.scatter_3d(df, x="x", y="y", z="z", **kwargs)
         fig.update_traces(
             text=tokens,
-            hovertemplate='%{text}<extra></extra>',
-            hoverlabel=dict(
-                bgcolor=style['bg'], 
-                font=dict(color=style['text'])),
-            marker=dict(size=5, opacity=0.6, line=dict(width=0))
+            hovertemplate="%{text}<extra></extra>",
+            hoverlabel=dict(bgcolor=style["bg"], font=dict(color=style["text"])),
+            marker=dict(size=5, opacity=0.6, line=dict(width=0)),
         )
         fig.update_layout(
             height=500,
             title=title if title else def_title,
             title_x=0.5,
-            title_xanchor='center',
-            scene=dict(bgcolor=style['bg'],
+            title_xanchor="center",
+            scene=dict(
+                bgcolor=style["bg"],
                 xaxis=dict(
-                    backgroundcolor=style['bg'],
-                    showticklabels=False, showgrid=grid,
-                    gridcolor=style['grid_color'],
-                    zeroline=False, title=None
+                    backgroundcolor=style["bg"],
+                    showticklabels=False,
+                    showgrid=grid,
+                    gridcolor=style["grid_color"],
+                    zeroline=False,
+                    title=None,
                 ),
                 yaxis=dict(
-                    backgroundcolor=style['bg'],
-                    showticklabels=False, showgrid=grid,
-                    gridcolor=style['grid_color'],
-                    zeroline=False, title=None
+                    backgroundcolor=style["bg"],
+                    showticklabels=False,
+                    showgrid=grid,
+                    gridcolor=style["grid_color"],
+                    zeroline=False,
+                    title=None,
                 ),
                 zaxis=dict(
-                    backgroundcolor=style['bg'],
-                    showticklabels=False, showgrid=grid,
-                    gridcolor=style['grid_color'],
-                    zeroline=False, title=None
-                )
+                    backgroundcolor=style["bg"],
+                    showticklabels=False,
+                    showgrid=grid,
+                    gridcolor=style["grid_color"],
+                    zeroline=False,
+                    title=None,
+                ),
             ),
-            paper_bgcolor=style['bg'],
-            font=dict(color=style['text']),
+            paper_bgcolor=style["bg"],
+            font=dict(color=style["text"]),
         )
         return fig
 
-
-    def plot_static(self, red_method: str = 'auto', grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False, color_by_class: bool = False) -> tuple[plt.Figure, plt.Axes]:
-        '''
+    def plot_static(
+        self,
+        red_method: str = "auto",
+        grid: bool = True,
+        theme: str = "light1",
+        title: str = None,
+        nlabels: int = 0,
+        use_subset: bool = False,
+        color_by_class: bool = False,
+    ) -> tuple[plt.Figure, plt.Axes]:
+        """
         Creates a simple static 3D scatterplot of the embeddings.
 
         Parameters
@@ -103,35 +128,67 @@ class Visualizer3D(BaseVisualizer):
         --------
         fig : matplotlib.figure.Figure
         ax : matplotlib.axes.Axes
-        '''
+        """
 
-        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
+        reduced_emb, tokens = self._set_embeddings(
+            use_subset=use_subset, red_method=red_method, dims=3
+        )
 
         if color_by_class:
             if self.loader.classes is None:
-                raise ValueError("No class labels found. Please define class labels to color by class.")
+                raise ValueError(
+                    "No class labels found. Please define class labels to color by class."
+                )
             else:
                 classes = self.loader.classes
         else:
             classes = None
 
-        fig, ax, colors = self._setup_plot(reduced_emb, theme, grid, title, dims=3, labels=classes)
-        ax.scatter(reduced_emb[:, 0], reduced_emb[:, 1], reduced_emb[:, 2], c=colors['points'], alpha=0.5, s=14, marker='o')
+        fig, ax, colors = self._setup_plot(
+            reduced_emb, theme, grid, title, dims=3, labels=classes
+        )
+        ax.scatter(
+            reduced_emb[:, 0],
+            reduced_emb[:, 1],
+            reduced_emb[:, 2],
+            c=colors["points"],
+            alpha=0.5,
+            s=14,
+            marker="o",
+        )
 
         texts = []
         if nlabels > 0:
             sparse_indices = self.select_sparse_labels(reduced_emb, nlabels)
             for i in sparse_indices:
-                texts.append(ax.text(reduced_emb[i, 0], reduced_emb[i, 1], reduced_emb[i, 2], tokens[i],
-                color=colors['text'], fontsize=7, alpha=1, ha='center', va='bottom'))
+                texts.append(
+                    ax.text(
+                        reduced_emb[i, 0],
+                        reduced_emb[i, 1],
+                        reduced_emb[i, 2],
+                        tokens[i],
+                        color=colors["text"],
+                        fontsize=7,
+                        alpha=1,
+                        ha="center",
+                        va="bottom",
+                    )
+                )
 
-        plt.rcParams['figure.dpi'] = 600
+        plt.rcParams["figure.dpi"] = 600
         plt.show()
         return fig, ax
-    
 
-    def plot_embeddings(self, red_method='auto', grid=True, theme='light1', title=None, use_subset=False, color_by_class=False):
-        '''
+    def plot_embeddings(
+        self,
+        red_method="auto",
+        grid=True,
+        theme="light1",
+        title=None,
+        use_subset=False,
+        color_by_class=False,
+    ):
+        """
         Creates an interactive 3D scatterplot of embeddings using Plotly.
 
         Parameters:
@@ -156,28 +213,48 @@ class Visualizer3D(BaseVisualizer):
         Notes:
         ------
         In 3D plotting Plotly.py tends to use GPU to visualize an high number of elements and label, so it is possible that this function does not work properly with a whole embedding set.
-        '''
+        """
         warnings.warn(
             "Without a suitable GPU, full 3D visualization may be slow or unstable. "
             "It is recommended to use a subset of the data for optimal performance and user experience."
         )
-        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
+        reduced_emb, tokens = self._set_embeddings(
+            use_subset=use_subset, red_method=red_method, dims=3
+        )
 
         if color_by_class:
             if self.loader.classes is None:
-                raise ValueError("No class labels found. Please define class labels to color by class.")
+                raise ValueError(
+                    "No class labels found. Please define class labels to color by class."
+                )
             else:
                 classes = self.loader.classes
         else:
             classes = None
 
-        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title="Word Embedding 3D Plot", labels=classes)
+        fig = self._setup_3d(
+            reduced_emb=reduced_emb,
+            theme=theme,
+            grid=grid,
+            tokens=tokens,
+            title=title,
+            def_title="Word Embedding 3D Plot",
+            labels=classes,
+        )
 
         return fig
 
-
-    def plot_similarity(self, target_word: str, dist: str = 'cosine', n: int = 10, red_method: str = 'pca', grid: bool = True, theme: str = 'light1', title: str = None):
-        '''
+    def plot_similarity(
+        self,
+        target_word: str,
+        dist: str = "cosine",
+        n: int = 10,
+        red_method: str = "pca",
+        grid: bool = True,
+        theme: str = "light1",
+        title: str = None,
+    ):
+        """
         Creates a dynamic 3D scatterplot showing the most similar words to a target word.
 
         Parameters
@@ -200,13 +277,15 @@ class Visualizer3D(BaseVisualizer):
         Returns
         --------
         fig : plotly.graph_objects.Figure
-        '''
+        """
         warnings.warn(
             "The parameter names target_word will be renamed to target in a future release. "
             "Please update your code accordingly.",
-            FutureWarning
+            FutureWarning,
         )
-        similar_words, similar_vecs, _ = n_most_similar(self.loader, target_word, dist, n)
+        similar_words, similar_vecs, _ = n_most_similar(
+            self.loader, target_word, dist, n
+        )
         target_vec = self.loader.get_embedding(target_word)
         vectors = np.vstack([target_vec.reshape(1, -1), similar_vecs])
         words = [target_word] + similar_words
@@ -215,29 +294,45 @@ class Visualizer3D(BaseVisualizer):
         target_reduced = reduced_emb[0]
         similar_reduced = reduced_emb[1:]
 
-        fig = self._setup_3d(reduced_emb=similar_reduced, theme=theme, grid=grid, tokens=words, title=title, def_title=f"Top {n} words similar to '{target_word}'")
+        fig = self._setup_3d(
+            reduced_emb=similar_reduced,
+            theme=theme,
+            grid=grid,
+            tokens=words,
+            title=title,
+            def_title=f"Top {n} words similar to '{target_word}'",
+        )
 
         style = self.get_theme(theme)
-        fig.add_trace(go.Scatter3d(
+        fig.add_trace(
+            go.Scatter3d(
                 x=[target_reduced[0]],
                 y=[target_reduced[1]],
                 z=[target_reduced[2]],
-                mode='markers',
-                marker=dict(
-                    size=5,
-                    color=style['target'],
-                    symbol='circle'
-                ),
-                text=[target_word],  
-                hovertemplate='%{text}<extra></extra>',  
-                showlegend=False
-            ))
+                mode="markers",
+                marker=dict(size=5, color=style["target"], symbol="circle"),
+                text=[target_word],
+                hovertemplate="%{text}<extra></extra>",
+                showlegend=False,
+            )
+        )
 
         return fig
 
-
-    def plot_clusters(self, n_clusters: int = 5, method: str = 'kmeans', metric: str = None, red_method: str = 'auto', show_centers: bool = False, grid: bool = True, theme: str = 'light1', title: str = None, nlabels: int = 0, use_subset: bool = False) -> go.Figure:
-        '''
+    def plot_clusters(
+        self,
+        n_clusters: int = 5,
+        method: str = "kmeans",
+        metric: str = None,
+        red_method: str = "auto",
+        show_centers: bool = False,
+        grid: bool = True,
+        theme: str = "light1",
+        title: str = None,
+        nlabels: int = 0,
+        use_subset: bool = False,
+    ) -> go.Figure:
+        """
         Creates a 3D scatterplot of clustered embeddings using a clustering algorithm.
         Dimensionality reduction is performed before clustering, in order to enhance visualization and reduce noise.
 
@@ -271,31 +366,42 @@ class Visualizer3D(BaseVisualizer):
         Notes:
         ------
         In 3D plotting Plotly.py tends to use GPU to visualize an high number of elements and label, so it is possible that this function does not work properly with a whole embedding set.
-        '''
+        """
         warnings.warn(
             "Without a suitable GPU, full 3D visualization may be slow or unstable. "
             "It is recommended to use a subset of the data for optimal performance and user experience."
         )
-        reduced_emb, tokens = self._set_embeddings(use_subset=use_subset, red_method=red_method, dims=3)
+        reduced_emb, tokens = self._set_embeddings(
+            use_subset=use_subset, red_method=red_method, dims=3
+        )
 
-        clusters, centers, reduced_emb = create_clusters(reduced_emb, n_clusters=n_clusters, method=method, metric=metric)
+        clusters, centers, reduced_emb = create_clusters(
+            reduced_emb, n_clusters=n_clusters, method=method, metric=metric
+        )
 
-        fig = self._setup_3d(reduced_emb=reduced_emb, theme=theme, grid=grid, tokens=tokens, title=title, def_title=f"3D Clustering Scatterplot", labels=clusters, for_clustering=True)
+        fig = self._setup_3d(
+            reduced_emb=reduced_emb,
+            theme=theme,
+            grid=grid,
+            tokens=tokens,
+            title=title,
+            def_title=f"3D Clustering Scatterplot",
+            labels=clusters,
+            for_clustering=True,
+        )
 
-        color = 'white' if 'dark' in theme else 'black'
-        
+        color = "white" if "dark" in theme else "black"
+
         if show_centers and centers is not None:
-            fig.add_trace(go.Scatter3d(
-                x=centers[:, 0],
-                y=centers[:, 1],
-                z=centers[:, 2],
-                mode='markers',
-                marker=dict(
-                    size=7,
-                    color=color,
-                    symbol='circle'
-                ),
-                name='Centers'
-            ))
+            fig.add_trace(
+                go.Scatter3d(
+                    x=centers[:, 0],
+                    y=centers[:, 1],
+                    z=centers[:, 2],
+                    mode="markers",
+                    marker=dict(size=7, color=color, symbol="circle"),
+                    name="Centers",
+                )
+            )
 
         return fig

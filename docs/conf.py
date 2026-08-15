@@ -1,6 +1,7 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src/wordviz'))
+
+sys.path.insert(0, os.path.abspath("../src/wordviz"))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -10,31 +11,30 @@ sys.path.insert(0, os.path.abspath('../src/wordviz'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'wordviz'
-copyright = '2025, Elena Zen'
-author = 'Elena Zen'
-release = '0.3.0'
+project = "wordviz"
+copyright = "2025, Elena Zen"
+author = "Elena Zen"
+release = "0.3.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon', 
-    'sphinx.ext.viewcode',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
-
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme" 
+html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    'navigation_depth': 2, 
-    'collapse_navigation': False,
+    "navigation_depth": 2,
+    "collapse_navigation": False,
 }

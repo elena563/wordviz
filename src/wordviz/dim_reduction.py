@@ -7,10 +7,17 @@ from sklearn.manifold import Isomap
 from sklearn.manifold import MDS
 import warnings
 
-SUPPORTED_METHODS = ('pca', 'tsne', 'umap', 'isomap', 'mds')
+SUPPORTED_METHODS = ("pca", "tsne", "umap", "isomap", "mds")
 
-def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, dist: str = 'euclidean', **kwargs) -> np.ndarray:
-    ''' 
+
+def reduce_dim(
+    vectors: np.ndarray,
+    method: str = "pca",
+    n_dimensions: int = 2,
+    dist: str = "euclidean",
+    **kwargs,
+) -> np.ndarray:
+    """
     Applies dimensionality reduction for visualization to input vectors using a specified method.
 
     Parameters:
@@ -35,48 +42,67 @@ def reduce_dim(vectors: np.ndarray, method: str = 'pca', n_dimensions: int = 2, 
     --------
     np.ndarray
         Embedding reduced at specified dimensions.
-    '''
-    
+    """
+
     if n_dimensions not in [2, 3]:
-        raise ValueError('n_dimensions has to be 2 or 3')
-    
-    if (method in ['isomap', 'tsne', 'mds']) and vectors.shape[0] > 5000:
-        warnings.warn(f"Warning: {method} is a computational heavy method, loading very large embeddings without subsetting may result in execution times so long that the process may never complete.")
+        raise ValueError("n_dimensions has to be 2 or 3")
+
+    if (method in ["isomap", "tsne", "mds"]) and vectors.shape[0] > 5000:
+        warnings.warn(
+            f"Warning: {method} is a computational heavy method, loading very large embeddings without subsetting may result in execution times so long that the process may never complete."
+        )
 
     default_params = {
-        'pca': {},
-        'tsne': {'random_state': 42, 'perplexity': 10},
-        'umap': {'n_neighbors': min(15, len(vectors) - 1), 'min_dist': 0.1, 'random_state': 42},
-        'isomap': {'n_neighbors': 5},
-        'mds': {'metric':True, 'n_init':3, 'max_iter':300, 'random_state':42, 'dissimilarity': 'euclidean'}
+        "pca": {},
+        "tsne": {"random_state": 42, "perplexity": 10},
+        "umap": {
+            "n_neighbors": min(15, len(vectors) - 1),
+            "min_dist": 0.1,
+            "random_state": 42,
+        },
+        "isomap": {"n_neighbors": 5},
+        "mds": {
+            "metric": True,
+            "n_init": 3,
+            "max_iter": 300,
+            "random_state": 42,
+            "dissimilarity": "euclidean",
+        },
     }
 
     if method in default_params:
         params = {**default_params[method.lower()], **kwargs}
     else:
-        raise ValueError(f"Method {method} not supported. Choose between {', '.join(SUPPORTED_METHODS)}")
+        raise ValueError(
+            f"Method {method} not supported. Choose between {', '.join(SUPPORTED_METHODS)}"
+        )
 
     match method.lower():
-        case 'pca':
+        case "pca":
             reducer = PCA(n_components=n_dimensions, **params)
-        case 'tsne':    
+        case "tsne":
             reducer = TSNE(n_components=n_dimensions, **params)
-        case 'umap':
-            require('viz')
+        case "umap":
+            require("viz")
             import umap
+
             reducer = umap.UMAP(n_components=n_dimensions, **params)
-        case 'isomap': 
+        case "isomap":
             reducer = Isomap(n_components=n_dimensions, **params)
-        case 'mds':
-            params.pop('dissimilarity', None)
-            reducer = MDS(n_components=n_dimensions,
-                        dissimilarity='euclidean' if dist == 'euclidean' else 'precomputed', **params)
-            if dist != 'precomputed' and dist != 'euclidean':
+        case "mds":
+            params.pop("dissimilarity", None)
+            reducer = MDS(
+                n_components=n_dimensions,
+                dissimilarity="euclidean" if dist == "euclidean" else "precomputed",
+                **params,
+            )
+            if dist != "precomputed" and dist != "euclidean":
                 from sklearn.metrics import pairwise_distances
+
                 vectors = pairwise_distances(vectors, metric=dist)
 
     reduced_emb = reducer.fit_transform(vectors)
-    
+
     return reduced_emb
 
 
@@ -86,16 +112,14 @@ class ReducedCache(dict):
         self.dims = dims
 
     def __setitem__(self, key, value):
-        if key != 'custom' and key not in SUPPORTED_METHODS:
+        if key != "custom" and key not in SUPPORTED_METHODS:
             raise ValueError(
                 f"Key must be a supported reduction method ({', '.join(SUPPORTED_METHODS)}) or 'custom', got '{key}'."
             )
-        if key == 'custom':
+        if key == "custom":
             arr = np.asarray(value)
             if arr.ndim != 2 or arr.shape[1] != self.dims:
                 raise ValueError(
                     f"'custom' must be a 2D array with {self.dims} columns, got shape {arr.shape}."
                 )
         super().__setitem__(key, value)
-        
-    

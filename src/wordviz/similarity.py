@@ -1,13 +1,23 @@
 import numpy as np
-from scipy.spatial.distance import cityblock, euclidean, cosine, chebyshev, canberra, braycurtis
+from scipy.spatial.distance import (
+    cityblock,
+    euclidean,
+    cosine,
+    chebyshev,
+    canberra,
+    braycurtis,
+)
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import pairwise_distances
 from typing import List, Tuple
 import warnings
 from wordviz.loading import EmbeddingLoader
 
-def embedding_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = 'cosine') -> float:
-    '''
+
+def embedding_distance(
+    loader: EmbeddingLoader, word1: str, word2: str, dist: str = "cosine"
+) -> float:
+    """
     Computes distance between two words given by user. Also supports sentence distance.
 
     Parameters
@@ -19,7 +29,7 @@ def embedding_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: st
     dist: str, default='cosine'
         Type of distance to use:
         - 'braycurtis'
-        - 'canberra'                      
+        - 'canberra'
         - 'chebyshev'
         - 'cosine'
         - 'dot'
@@ -31,11 +41,11 @@ def embedding_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: st
     Returns
     --------
     distance: float
-    '''
+    """
     warnings.warn(
         "The parameter names word1/word2 will be renamed to item1/item2 in a future release. "
         "Please update your code accordingly.",
-        FutureWarning
+        FutureWarning,
     )
     words = loader.tokens
 
@@ -43,7 +53,7 @@ def embedding_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: st
     if missing:
         raise ValueError(f"Item(s) not in vocabulary: {', '.join(missing)}")
 
-    vec1 = loader.get_embedding(word1)      
+    vec1 = loader.get_embedding(word1)
     vec2 = loader.get_embedding(word2)
     X = np.vstack([vec1, vec2])
     D = compute_distances(X, metric=dist)
@@ -51,19 +61,24 @@ def embedding_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: st
 
     return distance
 
-def word_distance(loader: EmbeddingLoader, word1: str, word2: str, dist: str = 'cosine') -> float:
+
+def word_distance(
+    loader: EmbeddingLoader, word1: str, word2: str, dist: str = "cosine"
+) -> float:
     warnings.warn(
         "word_distance is deprecated and will be renamed to embedding_distance in a future release. "
         "Please update your code accordingly.",
-        FutureWarning
+        FutureWarning,
     )
     return embedding_distance(loader, word1, word2, dist=dist)
- 
 
-def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosine', n: int = 10) -> tuple[list[str], np.ndarray, list[float]]:
-    '''
+
+def n_most_similar(
+    loader: EmbeddingLoader, target_word: str, dist: str = "cosine", n: int = 10
+) -> tuple[list[str], np.ndarray, list[float]]:
+    """
     Finds pairwise the n most similar words to a given target word using a specified distance metric.
-    
+
     Parameters
     -----------
     loader : EmbeddingLoader
@@ -74,7 +89,7 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         The distance metric to use. Options include 'cosine', 'euclidean', etc.
     n : int, default=10
         The number of most similar words to retrieve.
-    
+
     Returns
     --------
     words : list of str
@@ -83,59 +98,62 @@ def n_most_similar(loader: EmbeddingLoader, target_word: str, dist: str = 'cosin
         Embedding vectors corresponding to the most similar words.
     distances : list of float
         Distances from the target word to each of the most similar words.
-    '''
+    """
     warnings.warn(
         "The parameter names target_word will be renamed to target in a future release. "
         "Please update your code accordingly.",
-        FutureWarning
+        FutureWarning,
     )
     words = loader.tokens
     embeddings = loader.embeddings
-    
+
     if target_word not in words:
-        raise ValueError(f'{target_word} is not in vocabulary')
-    
+        raise ValueError(f"{target_word} is not in vocabulary")
+
     target_vector = loader.get_embedding(target_word)
     target_index = words.index(target_word)
-    
+
     mask = np.ones(len(words), dtype=bool)
     mask[target_index] = False
-    
+
     filtered_words = [words[i] for i in np.where(mask)[0]]
     filtered_embeddings = embeddings[mask]
-    
+
     # process in batch
     batch_size = 10000
     all_distances = []
     all_indices = []
-    
+
     for i in range(0, len(filtered_embeddings), batch_size):
-        batch_words = filtered_words[i:i+batch_size]
-        batch_vectors = filtered_embeddings[i:i+batch_size]
-        
+        batch_words = filtered_words[i : i + batch_size]
+        batch_vectors = filtered_embeddings[i : i + batch_size]
+
         distances = compute_distances(batch_vectors, metric=dist, target=target_vector)
-        
+
         all_distances.extend(distances)
-        all_indices.extend(range(i, min(i+batch_size, len(filtered_words))))
-    
+        all_indices.extend(range(i, min(i + batch_size, len(filtered_words))))
+
     # select indices
     if len(all_distances) <= n:
         top_n_indices = np.argsort(all_distances)
     else:
-        top_n_indices = np.argpartition(all_distances, n-1)[:n]
+        top_n_indices = np.argpartition(all_distances, n - 1)[:n]
         # sort by distance
-        top_n_indices = top_n_indices[np.argsort(np.array(all_distances)[top_n_indices])]
-    
+        top_n_indices = top_n_indices[
+            np.argsort(np.array(all_distances)[top_n_indices])
+        ]
+
     result_words = [filtered_words[all_indices[i]] for i in top_n_indices]
     result_distances = [all_distances[i] for i in top_n_indices]
     result_vectors = filtered_embeddings[top_n_indices]
-    
+
     return result_words, result_vectors, result_distances
 
 
-
-def compute_distances(X: np.ndarray, metric: str='euclidean', target: np.ndarray = None) -> np.ndarray:
-    '''
+def compute_distances(
+    X: np.ndarray, metric: str = "euclidean", target: np.ndarray = None
+) -> np.ndarray:
+    """
     Computes pairwise distances between rows of a matrix X using the specified metric.
 
     Parameters
@@ -147,43 +165,56 @@ def compute_distances(X: np.ndarray, metric: str='euclidean', target: np.ndarray
         Options include 'euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev', 'dot', 'pearson', and 'spearman'.
     target : np.ndarray, optional
         If provided, computes distances from the target vector to each row in X instead of pairwise distances among rows of X.
-    
+
     Returns
     --------
     distances : np.ndarray
         A 2D array of distances. If target is provided, returns a 1D array of distances from the target to each row in X.
-    '''
+    """
 
-    if metric in ['euclidean', 'cosine', 'manhattan', 'braycurtis', 'canberra', 'chebyshev']:
+    if metric in [
+        "euclidean",
+        "cosine",
+        "manhattan",
+        "braycurtis",
+        "canberra",
+        "chebyshev",
+    ]:
         if target is not None:
             distances = pairwise_distances(target.reshape(1, -1), X, metric=metric)
             return distances.ravel()
         return pairwise_distances(X, metric=metric)
-    
-    elif metric == 'dot':
+
+    elif metric == "dot":
         if target is not None:
             return 1 - (X @ target)
         return 1 - (X @ X.T)
-    
-    elif metric == 'pearson':
+
+    elif metric == "pearson":
         if target is not None:
             combined = np.vstack([target, X])
         else:
             combined = X
-        
+
         stds = combined.std(axis=1, keepdims=True)
-        stds = np.where(stds == 0, np.finfo(float).tiny, stds)      # avoid division by zero
+        stds = np.where(stds == 0, np.finfo(float).tiny, stds)  # avoid division by zero
         combined = (combined - combined.mean(axis=1, keepdims=True)) / stds
-        corr = np.corrcoef(combined) if target is None else (combined @ combined.T) / combined.shape[1]
+        corr = (
+            np.corrcoef(combined)
+            if target is None
+            else (combined @ combined.T) / combined.shape[1]
+        )
         corr = 1 - corr
-        
+
         if target is not None:
             return corr[0, 1:]
         return corr
-    
-    elif metric == 'spearman':
+
+    elif metric == "spearman":
         if target is not None:
-            distances = np.array([1 - spearmanr(target, X[i])[0] for i in range(X.shape[0])])
+            distances = np.array(
+                [1 - spearmanr(target, X[i])[0] for i in range(X.shape[0])]
+            )
             return distances
         n = X.shape[0]
         dist_mat = np.zeros((n, n))
