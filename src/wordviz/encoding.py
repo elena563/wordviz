@@ -58,15 +58,21 @@ def encode_sentences(sentences: list[str], model: str = "all-MiniLM-L6-v2", devi
     }
 
 
-def _find_word_position(target_word: str, sentence: str, tokenizer: AutoTokenizer) -> int | None:
+def _find_word_position(target_word: str, sentence: str, encoding: dict) -> int | None:
     """Finds word position in tokenized sentence"""
-    tokens = tokenizer.tokenize(sentence.lower())
-    target_tokens = tokenizer.tokenize(target_word.lower())
+    tokens = [t.strip(".,!?;:'\"()[]") for t in sentence.lower().split()]
+    target_token = target_word.lower()
+
+    if target_token not in tokens:
+        return None
+
+    word_idx = tokens.index(target_token)
 
     # first occurrence
-    for i in range(len(tokens) - len(target_tokens) + 1):
-        if tokens[i : i + len(target_tokens)] == target_tokens:
-            return i + 1
+    word_ids = encoding.word_ids()
+    for token_idx, wid in enumerate(word_ids):
+        if wid == word_idx:
+            return token_idx
     return None
 
 
@@ -127,14 +133,14 @@ def encode_word_contexts(
     valid_sentences = []
 
     for sentence in sentences:
-        word_pos = _find_word_position(target_word, sentence, tokenizer)
-        if word_pos is None:
-            continue  # skip if word is not found
-
-        inputs = tokenizer(
+        encoding = tokenizer(
             sentence, return_tensors="pt", truncation=True, max_length=512
         )
-        inputs = {k: v.to(device) for k, v in inputs.items()}
+        inputs = {k: v.to(device) for k, v in encoding.items()}
+
+        word_pos = _find_word_position(target_word, sentence, encoding)
+        if word_pos is None:
+            continue  # skip if word is not found
 
         with torch.no_grad():
             outputs = encoding_model(**inputs)

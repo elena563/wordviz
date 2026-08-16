@@ -12,6 +12,10 @@
 
 - Tests for encoding module, with both embeddings from the internal function and from a local simulated model.
 
+### Fixed
+
+- `_find_word_position`: replaced manual token matching and hardcoded +1 offset with word_ids()-based lookup to correctly handle special tokens and subword tokenization across model families.
+
 ## [0.6.1] - 11/08/2026
 
 ### Fixed

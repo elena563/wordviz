@@ -2,10 +2,15 @@ import numpy as np
 import pytest
 
 encoding = pytest.importorskip("wordviz.encoding")
-from transformers import BertConfig, BertModel, BertTokenizer  # noqa: E402
+from transformers import (  # noqa: E402
+    AutoTokenizer,
+    BertConfig,
+    BertModel,
+    BertTokenizer,
+)
 
 from wordviz import EmbeddingLoader  # noqa: E402
-from wordviz.encoding import encode_sentences  # noqa: E402
+from wordviz.encoding import _find_word_position, encode_sentences  # noqa: E402
 
 VOCAB = [
     "[PAD]",
@@ -92,3 +97,24 @@ def test_load_contextual_dict_missing_embeddings_raises():
 
     with pytest.raises(ValueError, match="embeddings"):
         loader.load_contextual({"labels": ["a", "b"]})
+
+
+@pytest.mark.parametrize(
+    "target_word, sentence, model, idx_check",
+    [   
+        ("sentence", "this is a sentence", "bert-base-uncased", 4),
+        ("hello", "hello, world", "bert-base-uncased", 1),
+        ("playing", "Playing chess is fun", "bert-base-cased", 1),
+        ("unbelievable", "this is an unbelievable test", "bert-base-uncased", 4),
+        ("the", "the cat saw the dog", "bert-base-uncased", 1),
+        ("hello", "hello", "bert-base-uncased", 1),
+    ],
+)
+def test_find_word_position(target_word, sentence, model, idx_check):
+    tokenizer = AutoTokenizer.from_pretrained(model)
+    encoding = tokenizer(
+        sentence, return_tensors="pt", truncation=True, max_length=512
+    )
+    position = _find_word_position(target_word, sentence, encoding)
+    assert position is not None
+    assert position == idx_check
