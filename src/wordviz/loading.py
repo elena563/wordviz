@@ -5,7 +5,7 @@ import warnings
 
 import numpy as np
 from gensim.models import KeyedVectors
-from gensim.models.fasttext import load_facebook_model
+from gensim.models.fasttext import FastTextKeyedVectors, load_facebook_model
 
 from wordviz.helpers.files_helpers import (
     download_file,
@@ -43,14 +43,14 @@ class EmbeddingLoader:
     """
 
     def __init__(self):
-        self.embeddings_raw = None
-        self.embeddings = None
-        self.tokens = None
-        self.dimension = None
-        self.type = None
-        self._classes = None
-        self.embeddings_subset = None
-        self.tokens_subset = None
+        self.embeddings_raw: KeyedVectors | FastTextKeyedVectors | None = None
+        self.embeddings: np.ndarray | None = None
+        self.tokens: list[str] | None = None
+        self.dimension: int | None = None
+        self.type: str | None = None
+        self._classes: list[str] | list[int] | None = None
+        self.embeddings_subset: np.ndarray | None = None
+        self.tokens_subset: list[str] | None = None
 
         with open(
             os.path.join(os.path.dirname(__file__), "pretrained_embeddings.json")
@@ -62,7 +62,7 @@ class EmbeddingLoader:
         return self._classes
 
     @classes.setter
-    def classes(self, value: list[str]):
+    def classes(self, value: list[str] | list[int] | None):
         if value is not None:
             if len(value) != len(self.tokens):
                 raise ValueError(
@@ -215,9 +215,9 @@ class EmbeddingLoader:
     def load_contextual(
         self,
         embeddings,
-        labels: list,
+        labels: list | None = None,
         embedding_type: str = "sentence",
-        classes: list = None,
+        classes: list | None = None,
     ) -> np.ndarray:
         """
         Loads embeddings from contextual models.
@@ -228,8 +228,11 @@ class EmbeddingLoader:
             - numpy.ndarray
             - torch.Tensor
             - List[List[float]]
-        labels: list of str
-            labels corresponding to embedding
+            - dict: the result of an encoding function from wordviz.encoding.
+              Only the key 'embeddings' is required; 'labels', 'type' and 'classes'
+              are optional and, when present, override the corresponding arguments.
+        labels: list of str, optional
+            labels corresponding to embedding. Used unless embeddings is a dict with a 'labels' key.
         embedding_type: str
             - 'sentence': Sentence/document/passage embeddings
             - 'word_context': Word embeddings in different contexts
@@ -242,6 +245,20 @@ class EmbeddingLoader:
         np.ndarray
             Loaded embedding matrix (n_labels x dimension).
         """
+
+        if isinstance(embeddings, dict):
+            result = embeddings
+            try:
+                embeddings = result["embeddings"]
+            except KeyError:
+                raise ValueError(
+                    "Missing key 'embeddings' in embeddings dict. It is the only required key; "
+                    "'labels', 'type' and 'classes' are optional."
+                )
+            labels = result.get("labels", labels)
+            embedding_type = result.get("type", embedding_type)
+            if classes is None:
+                classes = result.get("classes")
 
         embeddings_array = self._normalize_embeddings(embeddings)
 
@@ -276,7 +293,7 @@ class EmbeddingLoader:
 
     def list_available_pretrained(self) -> None:
         """prints a list of pretrained embeddings provided by the package"""
-        print("model | lang | source | dim")
+        print("model | lang | source | dim | num_words")
         for file in self.available_pretrained["data"]:
             print(" | ".join(x for x in file[:-2]))
 

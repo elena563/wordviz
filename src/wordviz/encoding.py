@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoModel, AutoTokenizer
 
 
-def encode_sentences(sentences, model="all-MiniLM-L6-v2", device="cpu"):
+def encode_sentences(sentences: list[str], model: str = "all-MiniLM-L6-v2", device: str = "auto") -> dict:
     """
     Encodes a list of sentences into embeddings.
 
@@ -18,11 +18,15 @@ def encode_sentences(sentences, model="all-MiniLM-L6-v2", device="cpu"):
     sentences : list of str
         Sentences to transform into embeddings.
     model : str, optional, default='all-MiniLM-L6-v2'
-        Name of the Hugging Face model to use. It is recommended to use a sentence-transformers model.
+        Name of the Hugging Face model to use, or a local model path.
+        It is recommended to use a sentence-transformers model.
         Common options:
         - 'all-MiniLM-L6-v2' (fast, English, 384 dimensions)
         - 'paraphrase-MiniLM-L3-v2' (very small, English, 256 dimensions)
         - 'paraphrase-multilingual-MiniLM-L12-v2' (multilingual, 384 dimensions)
+        Local paths are supported too: pass the path to a model directory,
+        either a sentence-transformers model or a fine-tuned transformers model.
+        A plain transformers model is loaded with mean pooling by default.
     device : str, optional, default='auto'
         Device to run the model on. Examples: 'cpu', 'cuda', 'mps', 'auto'.
 
@@ -54,7 +58,7 @@ def encode_sentences(sentences, model="all-MiniLM-L6-v2", device="cpu"):
     }
 
 
-def _find_word_position(target_word, sentence, tokenizer):
+def _find_word_position(target_word: str, sentence: str, tokenizer: AutoTokenizer) -> int | None:
     """Finds word position in tokenized sentence"""
     tokens = tokenizer.tokenize(sentence.lower())
     target_tokens = tokenizer.tokenize(target_word.lower())
@@ -68,12 +72,12 @@ def _find_word_position(target_word, sentence, tokenizer):
 
 def encode_word_contexts(
     target_word: str,
-    sentences: list,
+    sentences: list[str],
     match: str = "exact",
     occurrencies: str = "first",
     model: str = "distilbert-base-uncased",
     device: str = "auto",
-):
+) -> dict:
     """
     Encodes a word into contextual embeddings based on the sentence.
 
