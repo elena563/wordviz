@@ -304,7 +304,7 @@ class Visualizer(BaseVisualizer):
             texts, ax=ax, expand=(1.2, 2), arrowprops=dict(arrowstyle="-", color="k")
         )
         plt.rcParams["figure.dpi"] = 600
-        plt.show()
+        
         return fig, ax
 
     def plot_similarity(
@@ -401,7 +401,6 @@ class Visualizer(BaseVisualizer):
             )
 
         plt.rcParams["figure.dpi"] = 600
-        plt.show()
 
         return fig, ax
 
@@ -766,7 +765,6 @@ class Visualizer(BaseVisualizer):
             arrowprops=dict(arrowstyle="-", color=colors["text"]),
         )
         plt.rcParams["figure.dpi"] = 600
-        plt.show()
         return fig, ax
 
     def plot_interactive(

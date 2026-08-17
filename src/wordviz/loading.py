@@ -297,30 +297,20 @@ class EmbeddingLoader:
         for file in self.available_pretrained["data"]:
             print(" | ".join(x for x in file[:-2]))
 
-    def get_embedding(self, token: str) -> np.ndarray:
-        """returns corresponding embeddings using KeyedVectors object for a string given by the user"""
+    def get_embedding(self, token: str | int) -> np.ndarray:
+        '''Returns embedding vector for a given token/sentence string or integer index.'''
         self._require_loaded()
-
-        if self.type in ("sentence", "word_context"):
-            try:
-                index = self.tokens.index(token)
-            except ValueError:
-                raise KeyError(f"Token '{token}' not found")
-            return self.embeddings[index]
-        elif self.type == "word":
-            # prefer keyed vectors if available
-            if getattr(self, "embeddings_raw", None) is not None:
-                try:
-                    return self.embeddings_raw.get_vector(token)
-                except KeyError:
-                    pass
-            try:
-                idx = self.tokens.index(token)
-            except ValueError:
-                raise KeyError(f"Token '{token}' not found")
+        
+        if isinstance(token, int):
+            if 0 <= token < len(self.embeddings):
+                return self.embeddings[token]
+            raise IndexError(f"Index {token} out of bounds for embeddings of size {len(self.embeddings)}")
+            
+        try:
+            idx = self.tokens.index(token)
             return self.embeddings[idx]
-        else:
-            raise RuntimeError("Unknown embedding type")
+        except ValueError:
+            raise KeyError(f"Item '{token}' not found in loaded tokens/sentences.")
 
     def subset(
         self, n: int = 1000, strategy: str = "first", random_seed: int = None

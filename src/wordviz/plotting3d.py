@@ -177,7 +177,7 @@ class Visualizer3D(BaseVisualizer):
                 )
 
         plt.rcParams["figure.dpi"] = 600
-        plt.show()
+
         return fig, ax
 
     def plot_embeddings(

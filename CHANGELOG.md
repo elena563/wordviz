@@ -8,6 +8,7 @@
 - Allow dict input in `load_contextual` method to make it even faster to load embeddings from wordviz.encoding. Labels are now optional.
 - Updated the docstring to to make it clearer that the `encode_sentences` function also supports local models, not only Hugging Face models.
 - Allow `encode_word_contexts` to use batch processing for faster encoding.
+- Unified `get_embedding` for all embeddings type, allow to choose embedding also by index.
 
 ### Added
 
@@ -17,6 +18,7 @@
 ### Fixed
 
 - `_find_word_position`: replaced manual token matching and hardcoded +1 offset with word_ids()-based lookup to correctly handle special tokens and subword tokenization across model families.
+- Removed plt.show() from plotting method.
 
 ## [0.6.1] - 11/08/2026
 
