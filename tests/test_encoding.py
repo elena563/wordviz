@@ -10,7 +10,7 @@ from transformers import (  # noqa: E402
 )
 
 from wordviz import EmbeddingLoader  # noqa: E402
-from wordviz.encoding import _find_word_position, encode_sentences  # noqa: E402
+from wordviz.encoding import _find_word_position, encode_sentences, encode_word_contexts, _validate_model  # noqa: E402
 
 VOCAB = [
     "[PAD]",
@@ -32,7 +32,7 @@ VOCAB = [
 HIDDEN_SIZE = 32
 
 SENTENCES = [
-    "hello world",
+    "hello world model",
     "this is a sentence",
     "test from model",
 ]
@@ -81,6 +81,15 @@ def test_load_contextual_from_encoding_dict(tiny_model_path):
     assert loader.tokens == SENTENCES
     assert loader.type == "sentence"
 
+def test_load_contextual_word_context(tiny_model_path):
+    result = encode_word_contexts("model", SENTENCES, model=str(tiny_model_path))
+
+    loader = EmbeddingLoader()
+    loader.load_contextual(result)
+
+    assert loader.embeddings.shape == (len(SENTENCES) - 1, HIDDEN_SIZE)
+    assert len(loader.tokens) == 2
+    assert loader.type == "word_context"
 
 def test_load_contextual_dict_only_embeddings_required():
     embeddings = np.random.default_rng(42).normal(size=(3, 8)).astype(np.float32)
@@ -115,6 +124,17 @@ def test_find_word_position(target_word, sentence, model, idx_check):
     encoding = tokenizer(
         sentence, return_tensors="pt", truncation=True, max_length=512
     )
-    position = _find_word_position(target_word, sentence, encoding)
+    position = _find_word_position(target_word, sentence, encoding.word_ids())
     assert position is not None
     assert position == idx_check
+
+def test_validate_model_error():
+    with pytest.raises(ValueError):
+        _validate_model('invented model name')
+
+def test_validate_model():
+    try:
+        _validate_model('base-base-uncased')
+    except ValueError:
+        ('model not found')
+

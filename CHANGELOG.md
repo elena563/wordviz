@@ -7,10 +7,12 @@
 - Added `num_words` to metadata in `list_available_pretrained` to allow users to see the number of words in each pretrained embedding file.
 - Allow dict input in `load_contextual` method to make it even faster to load embeddings from wordviz.encoding. Labels are now optional.
 - Updated the docstring to to make it clearer that the `encode_sentences` function also supports local models, not only Hugging Face models.
+- Allow `encode_word_contexts` to use batch processing for faster encoding.
 
 ### Added
 
 - Tests for encoding module, with both embeddings from the internal function and from a local simulated model.
+- Model validation in encoding module to ensure that the provided model is acceptable for the functions.
 
 ### Fixed
 
