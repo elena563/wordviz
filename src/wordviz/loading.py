@@ -101,9 +101,21 @@ class EmbeddingLoader:
         - FastText binary files are supported via Facebook's native loader.
         - Loaded tokens are stored in self.tokens.
         - Embedding matrix is stored in self.embeddings.
+        - Each EmbeddingLoader instance holds the full embedding matrix in RAM.
+          Multiple instances with large embeddings may exceed available memory.
         """
-
         binary = validate_file(path)
+
+        file_size = os.path.getsize(path) / (1024 * 1024)
+        logger.info(f"Loading {format} embeddings ({file_size:.0f} MB)...")
+
+        if file_size > 500:
+            warnings.warn(
+                f"Large embedding file ({file_size:.0f} MB). "
+                "Multiple EmbeddingLoader instances with large embeddings "
+                "may cause MemoryError on machines with limited RAM.",
+                stacklevel=2,
+            )
 
         match format:
             case "word2vec":
@@ -162,6 +174,11 @@ class EmbeddingLoader:
         --------
         np.ndarray
             Loaded embedding matrix (n_words x dimension).
+
+        Notes
+        -----
+        - Each EmbeddingLoader instance holds the full embedding matrix in RAM.
+          Multiple instances with large embeddings may exceed available memory.
         """
 
         columns = self.available_pretrained["columns"]
@@ -298,14 +315,16 @@ class EmbeddingLoader:
             print(" | ".join(x for x in file[:-2]))
 
     def get_embedding(self, token: str | int) -> np.ndarray:
-        '''Returns embedding vector for a given token/sentence string or integer index.'''
+        """Returns embedding vector for a given token/sentence string or integer index."""
         self._require_loaded()
-        
+
         if isinstance(token, int):
             if 0 <= token < len(self.embeddings):
                 return self.embeddings[token]
-            raise IndexError(f"Index {token} out of bounds for embeddings of size {len(self.embeddings)}")
-            
+            raise IndexError(
+                f"Index {token} out of bounds for embeddings of size {len(self.embeddings)}"
+            )
+
         try:
             idx = self.tokens.index(token)
             return self.embeddings[idx]
@@ -366,3 +385,15 @@ class EmbeddingLoader:
             self.subset(n)
 
         return self.embeddings_subset, self.tokens_subset
+
+    def unload(self) -> None:
+        """Unloads the embeddings and tokens from memory."""
+        self.embeddings = None
+        self.embeddings_raw = None
+        self.tokens = None
+        self.dimension = None
+        self.type = None
+        self._classes = None
+        self.embeddings_subset = None
+        self.tokens_subset = None
+        logger.info("Embeddings and tokens have been unloaded from memory.")

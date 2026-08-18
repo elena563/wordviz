@@ -19,7 +19,9 @@ def _validate_model(model: str) -> None:
         ) from e
 
 
-def encode_sentences(sentences: list[str], model: str = "all-MiniLM-L6-v2", device: str = "auto") -> dict:
+def encode_sentences(
+    sentences: list[str], model: str = "sentence-transformers/all-MiniLM-L6-v2", device: str = "auto"
+) -> dict:
     """
     Encodes a list of sentences into embeddings.
 
@@ -110,7 +112,9 @@ def get_model_info(model: str = "distilbert-base-uncased") -> dict:
     }
 
 
-def _find_word_position(target_word: str, sentence: str, word_ids: list[int | None]) -> int | None:
+def _find_word_position(
+    target_word: str, sentence: str, word_ids: list[int | None]
+) -> int | None:
     """Finds word position in tokenized sentence.
 
     Parameters
@@ -228,7 +232,9 @@ def encode_word_contexts(
         valid_indices = []
         word_positions = []
         for j, sentence in enumerate(chunk):
-            word_pos = _find_word_position(target_word, sentence, batch_encoding.word_ids(batch_index=j))
+            word_pos = _find_word_position(
+                target_word, sentence, batch_encoding.word_ids(batch_index=j)
+            )
             if word_pos is not None:
                 valid_indices.append(j)
                 word_positions.append(word_pos)

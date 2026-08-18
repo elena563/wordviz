@@ -9,11 +9,13 @@
 - Updated the docstring to to make it clearer that the `encode_sentences` function also supports local models, not only Hugging Face models.
 - Allow `encode_word_contexts` to use batch processing for faster encoding.
 - Unified `get_embedding` for all embeddings type, allow to choose embedding also by index.
+- Improved user experience: added tqdm progress bar during download of pretrained embeddings, loading print during gensim loading (tqdm is not supported in this case) and warnings about possible MemoryError when loading large embeddings with multiple instances of EmbeddingLoader.
 
 ### Added
 
 - Tests for encoding module, with both embeddings from the internal function and from a local simulated model.
 - Model validation in encoding module to ensure that the provided model is acceptable for the functions.
+- New `unload` method in `EmbeddingLoader` class to free up memory by unloading embeddings and tokens from RAM.
 
 ### Fixed
 

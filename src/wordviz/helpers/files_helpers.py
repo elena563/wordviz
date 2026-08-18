@@ -6,6 +6,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from tqdm import tqdm
+
 logger = logging.getLogger(__name__)
 
 VALID_EXT = [".bin", ".txt", ".vec"]
@@ -22,7 +24,20 @@ def download_file(url: str, filename: str) -> Path:
     download_path = get_cache_dir() / filename
     if not download_path.exists():
         logger.info(f"Downloading {filename}...")
-        urllib.request.urlretrieve(url, download_path)
+        with urllib.request.urlopen(url) as response:
+            total = int(response.headers.get("Content-Length", 0))
+            with (
+                open(download_path, "wb") as f,
+                tqdm(
+                    total=total,
+                    unit="B",
+                    unit_scale=True,
+                    desc=filename,
+                ) as pbar,
+            ):
+                while chunk := response.read(8192):
+                    f.write(chunk)
+                    pbar.update(len(chunk))
     else:
         logger.info(f"{filename} already exists in cache.")
     return download_path

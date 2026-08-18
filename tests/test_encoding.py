@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import numpy as np
 import pytest
 
@@ -10,7 +11,12 @@ from transformers import (  # noqa: E402
 )
 
 from wordviz import EmbeddingLoader  # noqa: E402
-from wordviz.encoding import _find_word_position, encode_sentences, encode_word_contexts, _validate_model  # noqa: E402
+from wordviz.encoding import (
+    _find_word_position,
+    _validate_model,
+    encode_sentences,
+    encode_word_contexts,
+)  # noqa: E402
 
 VOCAB = [
     "[PAD]",
@@ -81,6 +87,7 @@ def test_load_contextual_from_encoding_dict(tiny_model_path):
     assert loader.tokens == SENTENCES
     assert loader.type == "sentence"
 
+
 def test_load_contextual_word_context(tiny_model_path):
     result = encode_word_contexts("model", SENTENCES, model=str(tiny_model_path))
 
@@ -90,6 +97,7 @@ def test_load_contextual_word_context(tiny_model_path):
     assert loader.embeddings.shape == (len(SENTENCES) - 1, HIDDEN_SIZE)
     assert len(loader.tokens) == 2
     assert loader.type == "word_context"
+
 
 def test_load_contextual_dict_only_embeddings_required():
     embeddings = np.random.default_rng(42).normal(size=(3, 8)).astype(np.float32)
@@ -110,7 +118,7 @@ def test_load_contextual_dict_missing_embeddings_raises():
 
 @pytest.mark.parametrize(
     "target_word, sentence, model, idx_check",
-    [   
+    [
         ("sentence", "this is a sentence", "bert-base-uncased", 4),
         ("hello", "hello, world", "bert-base-uncased", 1),
         ("playing", "Playing chess is fun", "bert-base-cased", 1),
@@ -121,20 +129,19 @@ def test_load_contextual_dict_missing_embeddings_raises():
 )
 def test_find_word_position(target_word, sentence, model, idx_check):
     tokenizer = AutoTokenizer.from_pretrained(model)
-    encoding = tokenizer(
-        sentence, return_tensors="pt", truncation=True, max_length=512
-    )
+    encoding = tokenizer(sentence, return_tensors="pt", truncation=True, max_length=512)
     position = _find_word_position(target_word, sentence, encoding.word_ids())
     assert position is not None
     assert position == idx_check
 
+
 def test_validate_model_error():
     with pytest.raises(ValueError):
-        _validate_model('invented model name')
+        _validate_model("invented model name")
+
 
 def test_validate_model():
     try:
-        _validate_model('base-base-uncased')
+        _validate_model("sentence-transformers/all-MiniLM-L6-v2")
     except ValueError:
-        ('model not found')
-
+        pytest.fail("model not found")
