@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.7.0] - Unreleased
+## [0.7.0] - 18/08/2026
 
 ### Updated
 
@@ -21,6 +21,7 @@
 
 - `_find_word_position`: replaced manual token matching and hardcoded +1 offset with word_ids()-based lookup to correctly handle special tokens and subword tokenization across model families.
 - Removed plt.show() from plotting method.
+- Fixed default model name in `encode_sentences` function.
 
 ## [0.6.1] - 11/08/2026
 

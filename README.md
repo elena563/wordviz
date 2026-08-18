@@ -9,12 +9,12 @@ With WordViz, users can gain insights into the structure of their word embedding
 
 This project was created as part of my Bachelor's Degree thesis in Statistics and Information Management with title (translated): "Word Embeddings in Practice: Designing a Library for Visualization and Operations"
 
-**version 0.6.1**
+**version 0.7.0**
 
 Documentation: https://wordviz.readthedocs.io/
 
-Built with:  
-  
+Built with:
+
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Plotly](https://img.shields.io/badge/Plotly-7A76FF?style=flat&logo=plotly&logoColor=white)]()
 [![matplotlib](https://img.shields.io/badge/matplotlib-15557C?style=flat)]()
@@ -24,19 +24,28 @@ Built with:
 
 ## Last Version Updates
 
-### Fixed
-- Added validation on zip file download to ensure the file is not corrupted before extraction.
-- Moved internal files related functions outside of the `EmbeddingLoader` class to improve modularity and maintainability. Put the new file in `helpers/` together with other helper functions. 
-- Removed internal deprecated glove2word2vec conversion, as GloVe files are now directly loaded in word2vec format.
-- Fixed error in FastText loading when using binary files.
-- Substituted list comprehension in `load_from_file` with gensim .vectors to improve performance.
-- Removed broken GoogleNews pretrained embeddings from the package, as it is no longer available for download. Added a warning to inform users about this change.
+### Updated
+
+- Added `num_words` to metadata in `list_available_pretrained` to allow users to see the number of words in each pretrained embedding file.
+- Allow dict input in `load_contextual` method to make it even faster to load embeddings from wordviz.encoding. Labels are now optional.
+- Updated the docstring to to make it clearer that the `encode_sentences` function also supports local models, not only Hugging Face models.
+- Allow `encode_word_contexts` to use batch processing for faster encoding.
+- Unified `get_embedding` for all embeddings type, allow to choose embedding also by index.
+- Improved user experience: added tqdm progress bar during download of pretrained embeddings, loading print during gensim loading (tqdm is not supported in this case) and warnings about possible MemoryError when loading large embeddings with multiple instances of EmbeddingLoader.
 
 ### Added
-- Tests for loading module, including tests for GloVe, Word2Vec, and FastText loading.
+
+- Tests for encoding module, with both embeddings from the internal function and from a local simulated model.
+- Model validation in encoding module to ensure that the provided model is acceptable for the functions.
+- New `unload` method in `EmbeddingLoader` class to free up memory by unloading embeddings and tokens from RAM.
+
+### Fixed
+
+- `_find_word_position`: replaced manual token matching and hardcoded +1 offset with word_ids()-based lookup to correctly handle special tokens and subword tokenization across model families.
+- Removed plt.show() from plotting method.
+- Fixed default model name in `encode_sentences` function.
 
 See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
-
 
 ## Main Features
 
@@ -47,7 +56,6 @@ See more about previous changes in [CHANGELOG.md](CHANGELOG.md)
 - Visualize clusters of related words
 - Interactive plots powered by `plotly`
 - Support for many light and dark themes
-
 
 ## Installation
 
@@ -69,7 +77,6 @@ uv init --python 3.12
 
 This warning will be removed in the next versions of wordviz, as Python 3.13 will be fully supported.
 
-
 ## Usage
 
 You can load and manage embeddings though the `EmbeddingLoader` class, and then visualize them with the `Visualizer` (or `Visualizer3D`) class.
@@ -88,7 +95,6 @@ You can explore all functionalities through the example notebook provided in the
 
 👉 [View example notebook](docs/example.ipynb)
 
-
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -102,11 +108,9 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-
 ## License
 
 This project is licensed under the MIT License.
-
 
 ## Contacts
 
