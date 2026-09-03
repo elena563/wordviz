@@ -1,45 +1,51 @@
 import warnings
+from collections.abc import Iterable
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from .clustering import create_clusters
 from .dim_reduction import ReducedCache, reduce_dim
+from .loading import EmbeddingLoader
 from .plotting import BaseVisualizer
 from .similarity import n_most_similar
 
 
 class Visualizer3D(BaseVisualizer):
-    def __init__(self, loader):
+    def __init__(self, loader: EmbeddingLoader) -> None:
         super().__init__(loader)
         self.reduced: dict[str, np.ndarray] = ReducedCache(dims=3)
         self.reduced_subset = None
 
     def _setup_3d(
         self,
-        reduced_emb,
-        theme,
-        grid,
-        tokens,
-        title,
-        def_title,
-        labels=None,
-        for_clustering=False,
-    ):
+        reduced_emb: np.ndarray,
+        theme: str,
+        grid: bool,
+        tokens: list[str],
+        title: str | None,
+        def_title: str,
+        labels: Iterable[Any] | None = None,
+        for_clustering: bool = False,
+    ) -> go.Figure:
         """base private function to config plotly 3d plot"""
         df = pd.DataFrame(reduced_emb, columns=["x", "y", "z"])
 
         style = self.get_theme(theme)
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if labels is not None:
+            label_list = list(labels)
             _, legend_labels = self.map_colors(
-                labels, theme, cluster_mode=for_clustering
+                label_list, theme, cluster_mode=for_clustering
             )
 
-            df["name"] = [legend_labels[label][1] for label in labels]
+            df["name"] = [legend_labels[label][1] for label in label_list]
 
             color_discrete_map = {
                 legend_labels[label][1]: legend_labels[label][0]
@@ -100,11 +106,11 @@ class Visualizer3D(BaseVisualizer):
         red_method: str = "auto",
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
+        title: str | None = None,
         nlabels: int = 0,
         use_subset: bool = False,
         color_by_class: bool = False,
-    ) -> tuple[plt.Figure, plt.Axes]:
+    ) -> tuple[Figure, Axes]:
         """
         Creates a simple static 3D scatterplot of the embeddings.
 
@@ -148,7 +154,8 @@ class Visualizer3D(BaseVisualizer):
         fig, ax, colors = self._setup_plot(
             reduced_emb, theme, grid, title, dims=3, labels=classes
         )
-        ax.scatter(
+        ax3d = cast(Any, ax)
+        ax3d.scatter(
             reduced_emb[:, 0],
             reduced_emb[:, 1],
             reduced_emb[:, 2],
@@ -163,7 +170,7 @@ class Visualizer3D(BaseVisualizer):
             sparse_indices = self.select_sparse_labels(reduced_emb, nlabels)
             for i in sparse_indices:
                 texts.append(
-                    ax.text(
+                    ax3d.text(
                         reduced_emb[i, 0],
                         reduced_emb[i, 1],
                         reduced_emb[i, 2],
@@ -182,13 +189,13 @@ class Visualizer3D(BaseVisualizer):
 
     def plot_embeddings(
         self,
-        red_method="auto",
-        grid=True,
-        theme="light1",
-        title=None,
-        use_subset=False,
-        color_by_class=False,
-    ):
+        red_method: str = "auto",
+        grid: bool = True,
+        theme: str = "light1",
+        title: str | None = None,
+        use_subset: bool = False,
+        color_by_class: bool = False,
+    ) -> go.Figure:
         """
         Creates an interactive 3D scatterplot of embeddings using Plotly.
 
@@ -253,8 +260,8 @@ class Visualizer3D(BaseVisualizer):
         red_method: str = "pca",
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
-    ):
+        title: str | None = None,
+    ) -> go.Figure:
         """
         Creates a dynamic 3D scatterplot showing the most similar words to a target word.
 
@@ -324,12 +331,12 @@ class Visualizer3D(BaseVisualizer):
         self,
         n_clusters: int = 5,
         method: str = "kmeans",
-        metric: str = None,
+        metric: str | None = None,
         red_method: str = "auto",
         show_centers: bool = False,
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
+        title: str | None = None,
         nlabels: int = 0,
         use_subset: bool = False,
     ) -> go.Figure:

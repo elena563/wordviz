@@ -1,15 +1,16 @@
 import numpy as np
 import pytest
 
+from wordviz import Visualizer
 from wordviz.dim_reduction import ReducedCache, reduce_dim
 
 
-def test_reduce_dim_output_shape(sample_embeddings):
+def test_reduce_dim_output_shape(sample_embeddings: np.ndarray) -> None:
     reduced = reduce_dim(sample_embeddings, method="pca", n_dimensions=2)
     assert reduced.shape == (len(sample_embeddings), 2)
 
 
-def test_reduce_dim_all_methods(sample_embeddings):
+def test_reduce_dim_all_methods(sample_embeddings: np.ndarray) -> None:
     for method in ["pca", "tsne", "umap", "isomap", "mds"]:
         reduced = reduce_dim(sample_embeddings, method=method, n_dimensions=2)
         assert reduced.shape[1] == 2
@@ -17,17 +18,17 @@ def test_reduce_dim_all_methods(sample_embeddings):
         assert not np.isinf(reduced).any()
 
 
-def test_reduce_dim_invalid_method(sample_embeddings):
+def test_reduce_dim_invalid_method(sample_embeddings: np.ndarray) -> None:
     with pytest.raises(ValueError):
         reduce_dim(sample_embeddings, method="nonexistent", n_dimensions=2)
 
 
-def test_reduce_dim_preserves_samples(sample_embeddings):
+def test_reduce_dim_preserves_samples(sample_embeddings: np.ndarray) -> None:
     reduced = reduce_dim(sample_embeddings, method="pca", n_dimensions=2)
     assert reduced.shape[0] == sample_embeddings.shape[0]
 
 
-def test_reduced_cache():
+def test_reduced_cache() -> None:
     cache = ReducedCache(2)
     cache["pca"] = np.zeros((5, 2))
     cache["custom"] = np.zeros((5, 2))
@@ -45,6 +46,6 @@ def test_reduced_cache():
     assert "custom" in cache3
 
 
-def test_missing_custom_reduction(vis):
+def test_missing_custom_reduction(vis: Visualizer) -> None:
     with pytest.raises(ValueError):
         vis.plot_embeddings(red_method="custom")  # 'custom' is not defined in the cache

@@ -1,6 +1,8 @@
 import json
 import os
 import warnings
+from collections.abc import Iterable
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +10,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 from adjustText import adjust_text
+from matplotlib.axes import Axes
 from matplotlib.colors import is_color_like, to_rgb
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from matplotlib.projections.polar import PolarAxes
 from scipy.cluster.hierarchy import fcluster, linkage, to_tree
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
@@ -16,13 +22,14 @@ from sklearn.cluster import KMeans
 from .clustering import create_clusters
 from .dim_reduction import ReducedCache, reduce_dim
 from .helpers.dendrogram_helpers import compute_positions, draw_tree
+from .loading import EmbeddingLoader
 from .similarity import compute_distances, n_most_similar
 
 
 class BaseVisualizer:
     reduced: dict[str, np.ndarray]
 
-    def __init__(self, loader):
+    def __init__(self, loader: EmbeddingLoader) -> None:
         self.loader = loader
         self.tokens = loader.tokens
         self.embeddings = loader.embeddings
@@ -30,7 +37,7 @@ class BaseVisualizer:
         with open(os.path.join(os.path.dirname(__file__), "themes.json")) as f:
             self.themes = json.load(f)
 
-    def list_theme_colors(self):
+    def list_theme_colors(self) -> None:
         """prints a list of available themes provided by the package"""
         print("background | points  | target  |   grid   | text")
         for theme_name, theme in self.themes.items():
@@ -39,10 +46,16 @@ class BaseVisualizer:
             plt.title(theme_name)
             plt.show()
 
-    def get_theme(self, theme="light1"):
-        return self.themes.get(theme, self.themes["light1"])
+    def get_theme(self, theme: str = "light1") -> dict[str, str]:
+        return cast(dict[str, str], self.themes.get(theme, self.themes["light1"]))
 
-    def _set_embeddings(self, use_subset=False, n=None, red_method=None, dims=2):
+    def _set_embeddings(
+        self,
+        use_subset: bool = False,
+        n: int | None = None,
+        red_method: str | None = None,
+        dims: int = 2,
+    ) -> tuple[np.ndarray, list[str]]:
         if use_subset:
             if n:
                 self.loader.subset(n)
@@ -54,6 +67,11 @@ class BaseVisualizer:
         else:
             emb = self.embeddings
             tokens = self.tokens
+
+        if emb is None:
+            raise ValueError("No embeddings loaded")
+        if tokens is None:
+            raise ValueError("No tokens loaded")
 
         if red_method is not None:
             if red_method == "auto":
@@ -91,11 +109,11 @@ class BaseVisualizer:
         reduced_emb: np.ndarray,
         theme: str,
         grid: bool,
-        title: str,
+        title: str | None = None,
         dims: int = 2,
-        labels=None,
-        for_clustering=False,
-    ) -> tuple[plt.Figure, plt.Axes, dict]:
+        labels: Iterable[Any] | None = None,
+        for_clustering: bool = False,
+    ) -> tuple[Figure, Axes, dict[str, Any]]:
         """base private function to config matplotlib plot"""
         style = self.get_theme(theme)
 
@@ -146,14 +164,15 @@ class BaseVisualizer:
 
         style = self.get_theme(theme)
 
-        coords = (
+        coords = cast(
+            tuple[Any, ...],
             (reduced_emb[:, 0], reduced_emb[:, 1], reduced_emb[:, 2])
             if dims == 3
-            else (reduced_emb[:, 0], reduced_emb[:, 1])
+            else (reduced_emb[:, 0], reduced_emb[:, 1]),
         )
 
         if labels is None:
-            ax.scatter(*coords, c=style["points"], alpha=0.5, s=14, marker="o")
+            ax.scatter(*coords, c=style["points"], alpha=0.5, s=14, marker="o")  # type: ignore[misc]
         else:
             if for_clustering:
                 colors, legend_labels = self.map_colors(
@@ -162,10 +181,10 @@ class BaseVisualizer:
             else:
                 colors, legend_labels = self.map_colors(labels, theme)
 
-            ax.scatter(*coords, c=colors, alpha=0.5, s=14, marker="o")
+            ax.scatter(*coords, c=colors, alpha=0.5, s=14, marker="o")  # type: ignore[misc]
 
             legend_elements = [
-                plt.Line2D(
+                Line2D(
                     [0],
                     [0],
                     marker="o",
@@ -185,8 +204,8 @@ class BaseVisualizer:
         return fig, ax, style
 
     def map_colors(
-        self, labels: list, theme: str = "light1", cluster_mode: bool = False
-    ) -> tuple[list, dict]:
+        self, labels: Iterable[Any], theme: str = "light1", cluster_mode: bool = False
+    ) -> tuple[list[str], dict[Any, tuple[str, str]]]:
         """automatizes color and legend label mapping for any categorical label applied to embeddings"""
         colors = self.get_theme(theme)
 
@@ -210,21 +229,21 @@ class BaseVisualizer:
 
         return mapped_colors, legend_labels
 
-    def select_sparse_labels(self, embeddings, n):
+    def select_sparse_labels(self, embeddings: np.ndarray, n: int) -> list[int]:
         """uses clustering to select n distributed labels to visualize"""
         kmeans = KMeans(n_clusters=n, random_state=0).fit(embeddings)
         centers = kmeans.cluster_centers_
-        indices = []
+        indices: list[int] = []
 
         for center in centers:
-            idx = np.argmin(np.linalg.norm(embeddings - center, axis=1))
+            idx = int(np.argmin(np.linalg.norm(embeddings - center, axis=1)))
             indices.append(idx)
 
         return indices
 
 
 class Visualizer(BaseVisualizer):
-    def __init__(self, loader):
+    def __init__(self, loader: EmbeddingLoader) -> None:
         super().__init__(loader)
         self.reduced: dict[str, np.ndarray] = ReducedCache(dims=2)
         self.reduced_subset = None
@@ -234,11 +253,11 @@ class Visualizer(BaseVisualizer):
         red_method: str = "auto",
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
+        title: str | None = None,
         nlabels: int = 0,
         use_subset: bool = False,
         color_by_class: bool = False,
-    ) -> tuple[plt.Figure, plt.Axes]:
+    ) -> tuple[Figure, Axes]:
         """
         Creates a simple static 2D scatterplot of the embeddings.
 
@@ -315,8 +334,8 @@ class Visualizer(BaseVisualizer):
         red_method: str = "pca",
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
-    ):
+        title: str | None = None,
+    ) -> tuple[Figure, Axes]:
         """
         Creates a scatterplot showing the most similar words to a target word.
 
@@ -410,8 +429,8 @@ class Visualizer(BaseVisualizer):
         use_subset: bool = True,
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
-    ):
+        title: str | None = None,
+    ) -> go.Figure:
         """
         Plots word embeddings in a topographical map using dimensionality reduction to maintain word distances in the representation. Allows to visualize word density in the space.
 
@@ -513,8 +532,8 @@ class Visualizer(BaseVisualizer):
         use_subset: bool = True,
         n: int = 500,
         theme: str = "light1",
-        title: bool = None,
-    ):
+        title: str | None = None,
+    ) -> go.Figure:
         """
         Creates a heatmap showing every vectorial value of every word.
 
@@ -575,8 +594,8 @@ class Visualizer(BaseVisualizer):
         use_subset: bool = True,
         n: int = 500,
         theme: str = "light1",
-        title: bool = None,
-    ):
+        title: str | None = None,
+    ) -> go.Figure:
         """
         Creates a heatmap showing pairwise distances between word embeddings.
 
@@ -640,8 +659,8 @@ class Visualizer(BaseVisualizer):
         use_subset: bool = True,
         n: int = 500,
         theme: str = "light1",
-        title: bool = None,
-    ):
+        title: str | None = None,
+    ) -> go.Figure:
         """
         DEPRECATED: This method will be renamed to `plot_similarity_heatmap` in a future release.
 
@@ -675,15 +694,15 @@ class Visualizer(BaseVisualizer):
         self,
         n_clusters: int = 5,
         method: str = "kmeans",
-        metric: str = None,
+        metric: str | None = None,
         red_method: str = "auto",
         show_centers: bool = False,
         grid: bool = True,
         theme: str = "light1",
-        title: str = None,
+        title: str | None = None,
         nlabels: int = 0,
         use_subset: bool = False,
-    ):
+    ) -> tuple[Figure, Axes]:
         """
         Creates a 2D scatterplot of clustered embeddings using a clustering algorithm.
         Dimensionality reduction is performed before clustering, in order to enhance visualization and reduce noise.
@@ -769,13 +788,13 @@ class Visualizer(BaseVisualizer):
 
     def plot_interactive(
         self,
-        red_method="auto",
-        grid=True,
-        theme="light1",
-        title=None,
-        use_subset=False,
-        color_by_class=False,
-    ):
+        red_method: str = "auto",
+        grid: bool = True,
+        theme: str = "light1",
+        title: str | None = None,
+        use_subset: bool = False,
+        color_by_class: bool = False,
+    ) -> go.Figure:
         """
         Creates an interactive 2D scatterplot of embeddings using Plotly.
 
@@ -809,6 +828,7 @@ class Visualizer(BaseVisualizer):
         if classes is not None:
             unique = list(dict.fromkeys(classes))
             color_map, _ = self.map_colors(classes, theme=theme)
+            color_map_dict = dict(zip(classes, color_map))
 
             fig = go.Figure()
             for label in unique:
@@ -824,7 +844,7 @@ class Visualizer(BaseVisualizer):
                         hoverlabel=dict(
                             bgcolor=style["bg"], font=dict(color=style["text"])
                         ),
-                        marker=dict(size=6, opacity=0.6, color=color_map[label]),
+                        marker=dict(size=6, opacity=0.6, color=color_map_dict[label]),
                     )
                 )
         else:
@@ -868,8 +888,13 @@ class Visualizer(BaseVisualizer):
         return fig
 
     def interactive_embeddings(
-        self, red_method="auto", grid=True, theme="light1", title=None, use_subset=False
-    ):
+        self,
+        red_method: str = "auto",
+        grid: bool = True,
+        theme: str = "light1",
+        title: str | None = None,
+        use_subset: bool = False,
+    ) -> go.Figure:
         """
         DEPRECATED: This method will be renamed to `plot_interactive` in a future release.
 
@@ -908,12 +933,12 @@ class Visualizer(BaseVisualizer):
         method: str = "complete",
         label_fontsize: int = 10,
         grid: bool = False,
-        title: str = None,
+        title: str | None = None,
         use_subset: bool = False,
         n: int = 100,
-        n_clusters: int = None,
+        n_clusters: int | None = None,
         theme: str = "light1",
-    ):
+    ) -> tuple[Figure, Axes]:
         """
         Creates a 2D circular dendrogram of clustered embeddings using hierarchical clustering.
         This first version of this function does not include title and theme parameters.
@@ -945,20 +970,22 @@ class Visualizer(BaseVisualizer):
         label_distance = 1.05
 
         emb, tokens = self._set_embeddings(use_subset=use_subset, n=n)
-        Z = linkage(emb, method=method)
+        Z = linkage(emb, method=cast(Any, method))
         tree = to_tree(Z, rd=False)
         n_leaves = tree.count
 
         if tokens is None:
             tokens = [f"Leaf {i}" for i in range(n_leaves)]
 
-        leaf_angles = {}
+        leaf_angles: dict[int, float] = {}
         leaf_counter = [0]
         max_dist = tree.dist
-        node_positions = {}  # {node_id: (angle, radius)}
-        leaf_order = {}
+        node_positions: dict[
+            int, tuple[float, float]
+        ] = {}  # {node_id: (angle, radius)}
+        leaf_order: dict[int, int] = {}
 
-        node_leaves = {}
+        node_leaves: dict[int, list[int]] = {}
         compute_positions(
             tree,
             leaf_counter,
@@ -983,7 +1010,7 @@ class Visualizer(BaseVisualizer):
                 lid: class_to_color[labels[lid]] for lid in leaf_angles.keys()
             }
 
-            node_color = {}
+            node_color: dict[int, str] = {}
             for node_id, leaves in node_leaves.items():
                 clusters_in_node = set(labels[lid] for lid in leaves)
                 if len(clusters_in_node) == 1:
@@ -1032,8 +1059,8 @@ class Visualizer(BaseVisualizer):
             title or "Word Embedding Dendrogram", fontsize=12, fontweight="bold"
         )
         ax.set_ylim(0, label_distance + 0.05)
-        ax.set_theta_zero_location("N")
-        ax.set_theta_direction(1)
+        cast(PolarAxes, ax).set_theta_zero_location("N")
+        cast(PolarAxes, ax).set_theta_direction(1)
 
         ax.spines["polar"].set_visible(False)
         if not grid:

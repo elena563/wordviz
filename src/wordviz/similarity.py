@@ -1,4 +1,5 @@
 import warnings
+from typing import cast
 
 import numpy as np
 from scipy.stats import spearmanr
@@ -41,6 +42,8 @@ def embedding_distance(
         FutureWarning,
     )
     words = loader.tokens
+    if words is None:
+        raise ValueError("No tokens loaded")
 
     missing = [w for w in (word1, word2) if w not in words]
     if missing:
@@ -50,7 +53,7 @@ def embedding_distance(
     vec2 = loader.get_embedding(word2)
     X = np.vstack([vec1, vec2])
     D = compute_distances(X, metric=dist)
-    distance = D[0, 1].item()
+    distance = float(D[0, 1].item())
 
     return distance
 
@@ -100,6 +103,11 @@ def n_most_similar(
     words = loader.tokens
     embeddings = loader.embeddings
 
+    if words is None or embeddings is None:
+        raise ValueError(
+            "Embeddings and tokens must be loaded before calling this function."
+        )
+
     if target_word not in words:
         raise ValueError(f"{target_word} is not in vocabulary")
 
@@ -114,8 +122,8 @@ def n_most_similar(
 
     # process in batch
     batch_size = 10000
-    all_distances = []
-    all_indices = []
+    all_distances: list[float] = []
+    all_indices: list[int] = []
 
     for i in range(0, len(filtered_embeddings), batch_size):
         # batch_words = filtered_words[i : i + batch_size]
@@ -144,7 +152,7 @@ def n_most_similar(
 
 
 def compute_distances(
-    X: np.ndarray, metric: str = "euclidean", target: np.ndarray = None
+    X: np.ndarray, metric: str = "euclidean", target: np.ndarray | None = None
 ) -> np.ndarray:
     """
     Computes pairwise distances between rows of a matrix X using the specified metric.
@@ -174,14 +182,16 @@ def compute_distances(
         "chebyshev",
     ]:
         if target is not None:
-            distances = pairwise_distances(target.reshape(1, -1), X, metric=metric)
+            distances = cast(
+                np.ndarray, pairwise_distances(target.reshape(1, -1), X, metric=metric)
+            )
             return distances.ravel()
-        return pairwise_distances(X, metric=metric)
+        return cast(np.ndarray, pairwise_distances(X, metric=metric))
 
     elif metric == "dot":
         if target is not None:
-            return 1 - (X @ target)
-        return 1 - (X @ X.T)
+            return cast(np.ndarray, 1 - (X @ target))
+        return cast(np.ndarray, 1 - (X @ X.T))
 
     elif metric == "pearson":
         if target is not None:

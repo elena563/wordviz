@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -12,13 +13,13 @@ from wordviz import EmbeddingLoader, Visualizer, Visualizer3D
 
 
 @pytest.fixture(scope="session")
-def sample_embeddings():
+def sample_embeddings() -> np.ndarray:
     np.random.seed(42)
     return np.random.randn(50, 384)
 
 
 @pytest.fixture(scope="session")
-def loader_static():
+def loader_static() -> EmbeddingLoader:
     loader_static = EmbeddingLoader()
     # let pytest find file
     file_path = os.path.join(os.path.dirname(__file__), "embedding_100words.txt")
@@ -27,12 +28,12 @@ def loader_static():
 
 
 @pytest.fixture(scope="session")
-def vis_static():
+def vis_static(loader_static: EmbeddingLoader) -> Visualizer:
     return Visualizer(loader_static)
 
 
 @pytest.fixture(scope="session")
-def loader():
+def loader() -> EmbeddingLoader:
     loader = EmbeddingLoader()
     np.random.seed(42)
     fake_embeddings = np.random.randn(50, 384)
@@ -45,17 +46,17 @@ def loader():
 
 
 @pytest.fixture(scope="session")
-def vis(loader):
+def vis(loader: EmbeddingLoader) -> Visualizer:
     return Visualizer(loader)
 
 
 @pytest.fixture(scope="session")
-def vis3d(loader):
+def vis3d(loader: EmbeddingLoader) -> Visualizer3D:
     return Visualizer3D(loader)
 
 
 @pytest.fixture(scope="session")
-def word2vec_bin_file(tmp_path_factory):
+def word2vec_bin_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
     kv = KeyedVectors(vector_size=5)
     kv.add_vectors(
         ["hello", "world", "embedding", "test"],
@@ -67,7 +68,7 @@ def word2vec_bin_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def glove_txt_file(tmp_path_factory):
+def glove_txt_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
     rng = np.random.default_rng(42)
     words = ["hello", "world", "embedding", "test"]
     path = tmp_path_factory.mktemp("glove") / "glove.txt"
@@ -80,7 +81,7 @@ def glove_txt_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def fasttext_bin_file(tmp_path_factory):
+def fasttext_bin_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
     sentences = [
         ["hello", "world", "embedding", "test"],
         ["another", "sentence", "hello", "world"],

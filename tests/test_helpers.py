@@ -9,15 +9,15 @@ X = np.array([[0, 0], [1, 0], [5, 0], [6, 0]])
 Z = linkage(X, method="complete")
 tree = to_tree(Z)
 n_leaves = len(X)
-node_positions = {}
-node_leaves = {}
+node_positions: dict[int, tuple[float, float]] = {}
+node_leaves: dict[int, list[int]] = {}
 
 
-def test_compute_positions():
+def test_compute_positions() -> None:
     leaf_counter = [0]
     max_dist = np.max(Z[:, 2])
-    leaf_angles = {}
-    leaf_order = {}
+    leaf_angles: dict[int, float] = {}
+    leaf_order: dict[int, int] = {}
 
     leaves = compute_positions(
         tree,
@@ -41,7 +41,7 @@ def test_compute_positions():
     np.testing.assert_allclose(diffs, 2 * np.pi / n_leaves, atol=1e-10)
 
 
-def test_draw_tree():
+def test_draw_tree() -> None:
     ax = Mock()
     n_leaves = len(X)
     draw_tree(tree, ax, node_positions, line_color="black", linewidth=1.0)

@@ -43,14 +43,14 @@ def download_file(url: str, filename: str) -> Path:
     return download_path
 
 
-def validate_file(path: str) -> bool:
+def validate_file(rawPath: str | os.PathLike[str] | None) -> bool:
     """checks if path argument leads to a valid file name and returns if it is binary"""
-    if path is None:
+    if rawPath is None:
         raise ValueError("File path is required")
-    if not isinstance(path, (str, os.PathLike)):
+    if not isinstance(rawPath, (str, os.PathLike)):
         raise TypeError("The file path must be a string")
 
-    path = Path(path)
+    path = Path(rawPath)
 
     if not path.exists():
         raise FileNotFoundError(f"Invalid file path {path}: the file does not exist")
@@ -105,7 +105,9 @@ def extract_archive(archive_path: Path, member: str, dest_dir: Path) -> None:
         shutil.copyfile(archive_path, dest_dir / member)
 
 
-def export_embedding(source_path, dest_folder):
+def export_embedding(
+    source_path: str | os.PathLike[str], dest_folder: str | os.PathLike[str]
+) -> None:
     """saves locally pretrained embeddings file"""
     os.makedirs(dest_folder, exist_ok=True)
     filename = os.path.basename(source_path)

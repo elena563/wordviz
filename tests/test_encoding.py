@@ -1,4 +1,6 @@
 # ruff: noqa: E402
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -45,7 +47,7 @@ SENTENCES = [
 
 
 @pytest.fixture(scope="module")
-def tiny_model_path(tmp_path_factory):
+def tiny_model_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("tiny_model")
 
     config = BertConfig(
@@ -56,7 +58,7 @@ def tiny_model_path(tmp_path_factory):
         intermediate_size=64,
         max_position_embeddings=64,
     )
-    BertModel(config).save_pretrained(path)
+    BertModel(config).save_pretrained(path)  # type: ignore[no-untyped-call]
 
     with open(path / "vocab.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(VOCAB))
@@ -66,7 +68,7 @@ def tiny_model_path(tmp_path_factory):
     return path
 
 
-def test_encode_sentences_from_local_path(tiny_model_path):
+def test_encode_sentences_from_local_path(tiny_model_path: Path) -> None:
     result = encode_sentences(SENTENCES, model=str(tiny_model_path), device="cpu")
 
     assert isinstance(result["embeddings"], np.ndarray)
@@ -77,39 +79,43 @@ def test_encode_sentences_from_local_path(tiny_model_path):
     assert result["model"] == str(tiny_model_path)
 
 
-def test_load_contextual_from_encoding_dict(tiny_model_path):
+def test_load_contextual_from_encoding_dict(tiny_model_path: Path) -> None:
     result = encode_sentences(SENTENCES, model=str(tiny_model_path), device="cpu")
 
     loader = EmbeddingLoader()
     loader.load_contextual(result)
 
+    assert loader.embeddings is not None
     assert loader.embeddings.shape == (len(SENTENCES), HIDDEN_SIZE)
     assert loader.tokens == SENTENCES
     assert loader.type == "sentence"
 
 
-def test_load_contextual_word_context(tiny_model_path):
+def test_load_contextual_word_context(tiny_model_path: Path) -> None:
     result = encode_word_contexts("model", SENTENCES, model=str(tiny_model_path))
 
     loader = EmbeddingLoader()
     loader.load_contextual(result)
 
+    assert loader.embeddings is not None
+    assert loader.tokens is not None
     assert loader.embeddings.shape == (len(SENTENCES) - 1, HIDDEN_SIZE)
     assert len(loader.tokens) == 2
     assert loader.type == "word_context"
 
 
-def test_load_contextual_dict_only_embeddings_required():
+def test_load_contextual_dict_only_embeddings_required() -> None:
     embeddings = np.random.default_rng(42).normal(size=(3, 8)).astype(np.float32)
 
     loader = EmbeddingLoader()
     loader.load_contextual({"embeddings": embeddings})
 
+    assert loader.embeddings is not None
     assert loader.embeddings.shape == (3, 8)
     assert loader.type == "sentence"
 
 
-def test_load_contextual_dict_missing_embeddings_raises():
+def test_load_contextual_dict_missing_embeddings_raises() -> None:
     loader = EmbeddingLoader()
 
     with pytest.raises(ValueError, match="embeddings"):
@@ -127,7 +133,9 @@ def test_load_contextual_dict_missing_embeddings_raises():
         ("hello", "hello", "bert-base-uncased", 1),
     ],
 )
-def test_find_word_position(target_word, sentence, model, idx_check):
+def test_find_word_position(
+    target_word: str, sentence: str, model: str, idx_check: int
+) -> None:
     tokenizer = AutoTokenizer.from_pretrained(model)
     encoding = tokenizer(sentence, return_tensors="pt", truncation=True, max_length=512)
     position = _find_word_position(target_word, sentence, encoding.word_ids())
@@ -135,12 +143,12 @@ def test_find_word_position(target_word, sentence, model, idx_check):
     assert position == idx_check
 
 
-def test_validate_model_error():
+def test_validate_model_error() -> None:
     with pytest.raises(ValueError):
         _validate_model("invented model name")
 
 
-def test_validate_model():
+def test_validate_model() -> None:
     try:
         _validate_model("sentence-transformers/all-MiniLM-L6-v2")
     except ValueError:

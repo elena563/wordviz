@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from wordviz import EmbeddingLoader
 from wordviz.similarity import compute_distances, embedding_distance, n_most_similar
 
 
@@ -18,7 +19,8 @@ from wordviz.similarity import compute_distances, embedding_distance, n_most_sim
         "spearman",
     ],
 )
-def test_n_most_similar(loader_static, dist):
+def test_n_most_similar(loader_static: EmbeddingLoader, dist: str) -> None:
+    assert loader_static.tokens is not None
     target_word = loader_static.tokens[0]
     n = 10
     words, vectors, distances = n_most_similar(
@@ -37,7 +39,7 @@ def test_n_most_similar(loader_static, dist):
     assert distances == sorted(distances)
 
 
-def test_n_most_similar_invalid_word(loader_static):
+def test_n_most_similar_invalid_word(loader_static: EmbeddingLoader) -> None:
     with pytest.raises(ValueError):
         n_most_similar(loader_static, "nonexistent_word", dist="cosine", n=10)
 
@@ -55,7 +57,7 @@ def test_n_most_similar_invalid_word(loader_static):
         "pearson",
     ],
 )
-def test_compute_distances(metric):
+def test_compute_distances(metric: str) -> None:
     X = np.array([[1, 0, 2], [0, 1, 3], [2, 1, 0]])
 
     D = compute_distances(X, metric=metric)
@@ -66,7 +68,7 @@ def test_compute_distances(metric):
     assert np.allclose(D, D.T)
 
 
-def test_compute_distances_spearman():
+def test_compute_distances_spearman() -> None:
     X = np.array([[1, 2, 3], [3, 2, 1]])
 
     D = compute_distances(X, metric="spearman")
@@ -75,14 +77,15 @@ def test_compute_distances_spearman():
     assert D[0, 1] == D[1, 0]
 
 
-def test_compute_distances_invalid_metric():
+def test_compute_distances_invalid_metric() -> None:
     X = np.array([[1, 2]])
 
     with pytest.raises(ValueError):
         compute_distances(X, metric="unknown")
 
 
-def test_embedding_distance(loader_static):
+def test_embedding_distance(loader_static: EmbeddingLoader) -> None:
+    assert loader_static.tokens is not None
     word1 = loader_static.tokens[0]
     word2 = loader_static.tokens[1]
 
@@ -91,7 +94,7 @@ def test_embedding_distance(loader_static):
     assert isinstance(dist_cosine, float)
 
 
-def test_embedding_distance_invalid_word(loader_static):
+def test_embedding_distance_invalid_word(loader_static: EmbeddingLoader) -> None:
     with pytest.raises(ValueError):
         embedding_distance(
             loader_static, "nonexistent_word1", "nonexistent_word2", dist="cosine"

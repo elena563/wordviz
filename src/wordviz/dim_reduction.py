@@ -1,4 +1,5 @@
 import warnings
+from typing import Any, cast
 
 import numpy as np
 from sklearn.decomposition import PCA
@@ -14,7 +15,7 @@ def reduce_dim(
     method: str = "pca",
     n_dimensions: int = 2,
     dist: str = "euclidean",
-    **kwargs,
+    **kwargs: Any,
 ) -> np.ndarray:
     """
     Applies dimensionality reduction for visualization to input vectors using a specified method.
@@ -70,7 +71,8 @@ def reduce_dim(
     }
 
     if method in default_params:
-        params = {**default_params[method.lower()], **kwargs}
+        base_params = cast(dict[str, Any], default_params[method.lower()])
+        params = {**base_params, **kwargs}
     else:
         raise ValueError(
             f"Method {method} not supported. Choose between {', '.join(SUPPORTED_METHODS)}"
@@ -100,17 +102,17 @@ def reduce_dim(
 
                 vectors = pairwise_distances(vectors, metric=dist)
 
-    reduced_emb = reducer.fit_transform(vectors)
+    reduced_emb = cast(np.ndarray, reducer.fit_transform(vectors))
 
     return reduced_emb
 
 
-class ReducedCache(dict):
+class ReducedCache(dict[str, np.ndarray]):
     def __init__(self, dims: int):
         super().__init__()
         self.dims = dims
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: np.ndarray) -> None:
         if key != "custom" and key not in SUPPORTED_METHODS:
             raise ValueError(
                 f"Key must be a supported reduction method ({', '.join(SUPPORTED_METHODS)}) or 'custom', got '{key}'."

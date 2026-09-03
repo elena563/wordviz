@@ -2,10 +2,15 @@ import re
 
 import plotly.graph_objects as go
 import pytest
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+
+from wordviz import EmbeddingLoader, Visualizer
 
 
-def test_map_colors(vis, loader):
+def test_map_colors(vis: Visualizer, loader: EmbeddingLoader) -> None:
+    assert loader.classes is not None
+    assert loader.tokens is not None
     colors_list, colors_dict = vis.map_colors(
         loader.classes, theme="light1", cluster_mode=True
     )
@@ -23,15 +28,17 @@ def test_map_colors(vis, loader):
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 @pytest.mark.parametrize("color_by_class", [True, False])
-def test_plot_embeddings(vis, red_method, color_by_class):
+def test_plot_embeddings(
+    vis: Visualizer, red_method: str, color_by_class: bool
+) -> None:
     fig, ax = vis.plot_embeddings(red_method=red_method, color_by_class=color_by_class)
     assert "pca" in vis.reduced
     assert vis.reduced["pca"].shape[1] == 2
-    assert isinstance(fig, plt.Figure)
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(fig, Figure)
+    assert isinstance(ax, Axes)
 
 
-def test_plot_cache_reuse(vis):
+def test_plot_cache_reuse(vis: Visualizer) -> None:
     vis.plot_embeddings(red_method="pca")
     cached = vis.reduced.get("pca")
     assert cached is not None
@@ -44,14 +51,15 @@ def test_plot_cache_reuse(vis):
 @pytest.mark.parametrize(
     "method", ["kmeans", "dbscan", "hdbscan", "hierarchical", "gmm"]
 )
-def test_plot_clusters(vis, red_method, method):
+def test_plot_clusters(vis: Visualizer, red_method: str, method: str) -> None:
     fig, ax = vis.plot_clusters(red_method=red_method, method=method)
-    assert isinstance(fig, plt.Figure)
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(fig, Figure)
+    assert isinstance(ax, Axes)
 
 
 @pytest.fixture
-def target(vis):
+def target(vis: Visualizer) -> str:
+    assert vis.loader.tokens is not None
     return vis.loader.tokens[1]
 
 
@@ -60,14 +68,16 @@ def target(vis):
     ["cosine", "euclidean", "manhattan", "chebyshev", "dot", "pearson", "spearman"],
 )
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_similarity(vis, target, dist, red_method):
+def test_plot_similarity(
+    vis: Visualizer, target: str, dist: str, red_method: str
+) -> None:
     fig, ax = vis.plot_similarity(target, dist=dist, n=10, red_method=red_method)
-    assert isinstance(fig, plt.Figure)
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(fig, Figure)
+    assert isinstance(ax, Axes)
 
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_topography(vis, red_method):
+def test_plot_topography(vis: Visualizer, red_method: str) -> None:
     fig = vis.plot_topography(red_method=red_method)
     assert isinstance(fig, go.Figure)
 
@@ -76,18 +86,18 @@ def test_plot_topography(vis, red_method):
     "dist",
     ["cosine", "euclidean", "manhattan", "chebyshev", "dot", "pearson", "spearman"],
 )
-def test_plot_similarity_heatmap(vis, dist):
+def test_plot_similarity_heatmap(vis: Visualizer, dist: str) -> None:
     fig = vis.plot_similarity_heatmap(dist=dist)
     assert isinstance(fig, go.Figure)
 
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
-def test_plot_interactive(vis, red_method):
+def test_plot_interactive(vis: Visualizer, red_method: str) -> None:
     fig = vis.plot_interactive(red_method=red_method)
     assert isinstance(fig, go.Figure)
 
 
-def test_plot_dendrogram(vis):
+def test_plot_dendrogram(vis: Visualizer) -> None:
     fig, ax = vis.plot_dendrogram()
-    assert isinstance(fig, plt.Figure)
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(fig, Figure)
+    assert isinstance(ax, Axes)

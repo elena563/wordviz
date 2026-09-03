@@ -10,7 +10,7 @@ _OPTIONAL_DEPENDENCIES = {
 }
 
 
-def require(extra: str):
+def require(extra: str) -> None:
     if extra not in _OPTIONAL_DEPENDENCIES:
         raise ValueError(f"Unknown optional dependency group: {extra}")
 

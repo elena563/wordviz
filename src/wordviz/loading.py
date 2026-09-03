@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import warnings
+from typing import Any, cast
 
 import numpy as np
 from gensim.models import KeyedVectors
@@ -42,7 +43,7 @@ class EmbeddingLoader:
         Class labels for the embeddings, used for coloring in visualizations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.embeddings_raw: KeyedVectors | FastTextKeyedVectors | None = None
         self.embeddings: np.ndarray | None = None
         self.tokens: list[str] | None = None
@@ -58,19 +59,21 @@ class EmbeddingLoader:
             self.available_pretrained = json.load(f)
 
     @property
-    def classes(self):
+    def classes(self) -> list[str] | list[int] | None:
         return self._classes
 
     @classes.setter
-    def classes(self, value: list[str] | list[int] | None):
+    def classes(self, value: list[str] | list[int] | None) -> None:
         if value is not None:
+            if self.tokens is None:
+                raise ValueError("Cannot set 'classes' when 'tokens' is None")
             if len(value) != len(self.tokens):
                 raise ValueError(
                     f"'classes' length ({len(value)}) must match number of tokens ({len(self.tokens)})"
                 )
         self._classes = value
 
-    def _require_loaded(self, check_tokens=False) -> None:
+    def _require_loaded(self, check_tokens: bool = False) -> None:
         if self.embeddings is None:
             raise ValueError(
                 "No embeddings loaded. Call load_from_file() or load_contextual() first."
@@ -134,6 +137,9 @@ class EmbeddingLoader:
                     path, binary=False, no_header=True
                 )
 
+        if self.embeddings_raw is None:
+            raise ValueError(f"Unsupported format: {format}")
+
         self.tokens = list(self.embeddings_raw.index_to_key)
         self.dimension = self.embeddings_raw.vector_size
         self.type = "word"
@@ -150,7 +156,7 @@ class EmbeddingLoader:
         source: str,
         dimension: str,
         save_file: bool = False,
-        export_dir: str = None,
+        export_dir: str | None = None,
     ) -> np.ndarray:
         """
         Downloads and loads a pretrained embedding model from an online source.
@@ -231,10 +237,10 @@ class EmbeddingLoader:
 
     def load_contextual(
         self,
-        embeddings,
-        labels: list | None = None,
+        embeddings: Any,
+        labels: list[str] | None = None,
         embedding_type: str = "sentence",
-        classes: list | None = None,
+        classes: list[str] | list[int] | None = None,
     ) -> np.ndarray:
         """
         Loads embeddings from contextual models.
@@ -288,14 +294,16 @@ class EmbeddingLoader:
 
         return self.embeddings
 
-    def _normalize_embeddings(self, embeddings) -> np.ndarray:
+    def _normalize_embeddings(self, embeddings: Any) -> np.ndarray:
         """Converts embeddings to numpy array."""
 
         if isinstance(embeddings, np.ndarray):
-            return embeddings.astype(np.float32)
+            return cast(np.ndarray, embeddings.astype(np.float32))
 
         elif hasattr(embeddings, "detach"):  # torch.Tensor
-            return embeddings.detach().cpu().numpy().astype(np.float32)
+            return cast(
+                np.ndarray, embeddings.detach().cpu().numpy().astype(np.float32)
+            )
 
         elif isinstance(embeddings, list):
             return np.array(embeddings, dtype=np.float32)
@@ -318,21 +326,24 @@ class EmbeddingLoader:
         """Returns embedding vector for a given token/sentence string or integer index."""
         self._require_loaded()
 
+        embeddings = cast(np.ndarray, self.embeddings)
+        tokens = cast(list[str], self.tokens)
+
         if isinstance(token, int):
-            if 0 <= token < len(self.embeddings):
-                return self.embeddings[token]
+            if 0 <= token < len(embeddings):
+                return cast(np.ndarray, embeddings[token])
             raise IndexError(
-                f"Index {token} out of bounds for embeddings of size {len(self.embeddings)}"
+                f"Index {token} out of bounds for embeddings of size {len(embeddings)}"
             )
 
         try:
-            idx = self.tokens.index(token)
-            return self.embeddings[idx]
+            idx = tokens.index(token)
+            return cast(np.ndarray, embeddings[idx])
         except ValueError:
             raise KeyError(f"Item '{token}' not found in loaded tokens/sentences.")
 
     def subset(
-        self, n: int = 1000, strategy: str = "first", random_seed: int = None
+        self, n: int = 1000, strategy: str = "first", random_seed: int | None = None
     ) -> None:
         """
         Create a subset of the current embeddings and tokens. Useful for speeding up visualizations or
@@ -358,7 +369,9 @@ class EmbeddingLoader:
         """
         self._require_loaded(check_tokens=True)
 
-        emb_size = self.embeddings.shape[0]
+        embeddings = cast(np.ndarray, self.embeddings)
+        all_tokens = cast(list[str], self.tokens)
+        emb_size = embeddings.shape[0]
 
         if n > emb_size:
             logger.info(
@@ -375,14 +388,17 @@ class EmbeddingLoader:
         else:
             raise ValueError("strategy has to be 'first' o 'random'")
 
-        self.tokens_subset = [self.tokens[i] for i in indices]
-        self.embeddings_subset = self.embeddings[indices]
+        self.tokens_subset = [all_tokens[i] for i in indices]
+        self.embeddings_subset = embeddings[indices]
 
-    def use_subset(self, n: int = 1000) -> tuple[list[str], np.ndarray]:
+    def use_subset(self, n: int = 1000) -> tuple[np.ndarray, list[str]]:
         """returns embedding subset. If None, creates 1000 words subset and returns it."""
 
         if self.embeddings_subset is None:
             self.subset(n)
+
+        if self.embeddings_subset is None or self.tokens_subset is None:
+            raise RuntimeError("Failed to create the embedding subset.")
 
         return self.embeddings_subset, self.tokens_subset
 

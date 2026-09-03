@@ -1,4 +1,5 @@
 import time
+from collections.abc import Callable
 
 import numpy as np
 
@@ -11,6 +12,8 @@ def _n_most_similar_old(
     loader: EmbeddingLoader, target_word: str, dist: str = "cosine", n: int = 10
 ) -> tuple[list[str], np.ndarray, list[float]]:
     words = loader.tokens
+    if words is None:
+        raise ValueError("No tokens available")
 
     if target_word not in words:
         raise ValueError(f"{target_word} is not in vocabulary")
@@ -25,8 +28,8 @@ def _n_most_similar_old(
 
     # process in batch
     batch_size = 10000
-    all_distances = []
-    all_indices = []
+    all_distances: list[float] = []
+    all_indices: list[int] = []
 
     for i in range(0, len(filtered_words), batch_size):
         batch_words = filtered_words[i : i + batch_size]
@@ -58,6 +61,7 @@ def _n_most_similar_old(
 
 loader = EmbeddingLoader()
 loader.load_pretrained("glove", "en", "wiki", "50d")
+assert loader.tokens is not None
 print(f"Loaded {len(loader.tokens)} tokens from GloVe embeddings.")
 word = "example"
 dist = "cosine"
@@ -65,8 +69,10 @@ n = 10
 RUNS = 1
 
 
-def timeit(fn, *args, runs=RUNS):
-    times = []
+def timeit[T](
+    fn: Callable[..., T], *args: object, runs: int = RUNS
+) -> tuple[T, list[float]]:
+    times: list[float] = []
     for _ in range(runs):
         t0 = time.perf_counter()
         result = fn(*args)

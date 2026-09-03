@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import numpy as np
 from scipy.cluster.hierarchy import fcluster, linkage
 from sklearn.cluster import DBSCAN, HDBSCAN, KMeans
@@ -5,7 +7,10 @@ from sklearn.mixture import GaussianMixture
 
 
 def create_clusters(
-    vectors: np.ndarray, n_clusters: int = 5, method: str = "kmeans", metric: str = None
+    vectors: np.ndarray,
+    n_clusters: int = 5,
+    method: str = "kmeans",
+    metric: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray]:
     """
     Performs clustering on embeddings for visualization purposes.
@@ -23,7 +28,7 @@ def create_clusters(
         - 'hdbscan': Hierarchical Density-Based Spatial Clustering of Applications with Noise
         - 'hierarchical': Hierarchical clustering
         - 'gmm': Gaussian Mixture Model clustering
-    metric : str, default=None
+    metric : str | None, default=None
         Distance metric to use for clustering (used only for methods that support it).
 
     Returns:
@@ -51,7 +56,7 @@ def create_clusters(
 
     match method:
         case "hierarchical":
-            Z = linkage(vectors, method="single", metric=metric)
+            Z = linkage(vectors, method="single", metric=cast(Any, metric))
             labels = fcluster(Z, t=n_clusters, criterion="maxclust")
             centers = None
         case "kmeans":

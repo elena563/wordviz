@@ -1,7 +1,8 @@
 from collections.abc import Mapping
+from typing import cast
 
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from scipy.cluster.hierarchy import ClusterNode
 
 
@@ -27,8 +28,10 @@ def compute_positions(
         leaf_counter[0] += 1
         return [node.id]
     else:
+        node_left = cast(ClusterNode, node.left)
+        node_right = cast(ClusterNode, node.right)
         left_leaves = compute_positions(
-            node.left,
+            node_left,
             leaf_counter,
             n_leaves,
             max_dist,
@@ -38,7 +41,7 @@ def compute_positions(
             node_leaves,
         )
         right_leaves = compute_positions(
-            node.right,
+            node_right,
             leaf_counter,
             n_leaves,
             max_dist,
@@ -75,28 +78,30 @@ def compute_positions(
         radius = 1.0 - (
             node.dist / max_dist if max_dist > 0 else 0
         )  # radius is inversely proportional to distance from root
-        node_positions[node.id] = (mean_angle, radius)
+        node_positions[node.id] = (float(mean_angle), radius)
         return all_leaves
 
 
 def draw_tree(
     node: ClusterNode,
-    ax: plt.Axes,
+    ax: Axes,
     node_positions: Mapping[int, tuple[float, float]],
-    node_color: dict[int, str] = None,
+    node_color: dict[int, str] | None = None,
     line_color: str = "black",
     linewidth: float = 1.0,
-):
+) -> None:
     """Recursively draws the branches of the dendrogram."""
     if not node.is_leaf():
+        node_left = cast(ClusterNode, node.left)
+        node_right = cast(ClusterNode, node.right)
         _, parent_radius = node_positions[node.id]
 
-        left_angle, left_radius = node_positions[node.left.id]
-        right_angle, right_radius = node_positions[node.right.id]
+        left_angle, left_radius = node_positions[node_left.id]
+        right_angle, right_radius = node_positions[node_right.id]
 
         for child_node, (child_angle, child_radius) in [
-            (node.left, (left_angle, left_radius)),
-            (node.right, (right_angle, right_radius)),
+            (node_left, (left_angle, left_radius)),
+            (node_right, (right_angle, right_radius)),
         ]:
             child_color = (
                 node_color.get(child_node.id, line_color) if node_color else line_color
@@ -133,5 +138,5 @@ def draw_tree(
                 zorder=1,
             )
 
-        draw_tree(node.left, ax, node_positions, node_color, line_color, linewidth)
-        draw_tree(node.right, ax, node_positions, node_color, line_color, linewidth)
+        draw_tree(node_left, ax, node_positions, node_color, line_color, linewidth)
+        draw_tree(node_right, ax, node_positions, node_color, line_color, linewidth)

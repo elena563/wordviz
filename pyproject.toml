@@ -42,6 +42,11 @@ pytest = "^8.3.5"
 black = "^25.1.0"
 isort = "^6.0.1"
 sphinx = "^8.2.3"
+mypy = "^2.3.1"
+pandas-stubs = "*"
+types-seaborn = "*"
+types-tqdm = "*"
+scipy-stubs = "*"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -49,7 +54,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"] 
@@ -61,3 +66,25 @@ quote-style = "double"
 [tool.pytest.ini_options]
 markers = ["slow: tests that download/load large pretrained models"]
 addopts = "-m 'not slow'"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["docs/", "source/"]
+
+[[tool.mypy.overrides]]
+module = [
+    "transformers",
+    "transformers.*",
+    "sklearn",
+    "sklearn.*",
+    "gensim",
+    "gensim.*",
+    "adjustText",
+    "umap",
+    "umap.*",
+    "plotly",
+    "plotly.*",
+]
+ignore_missing_imports = true
+disallow_untyped_calls = false

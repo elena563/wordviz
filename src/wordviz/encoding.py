@@ -20,8 +20,10 @@ def _validate_model(model: str) -> None:
 
 
 def encode_sentences(
-    sentences: list[str], model: str = "sentence-transformers/all-MiniLM-L6-v2", device: str = "auto"
-) -> dict:
+    sentences: list[str],
+    model: str = "sentence-transformers/all-MiniLM-L6-v2",
+    device: str = "auto",
+) -> dict[str, np.ndarray | list[str] | str | int]:
     """
     Encodes a list of sentences into embeddings.
 
@@ -72,7 +74,7 @@ def encode_sentences(
     }
 
 
-def get_model_info(model: str = "distilbert-base-uncased") -> dict:
+def get_model_info(model: str = "distilbert-base-uncased") -> dict[str, str | int]:
     """
     Returns metadata about a transformer model.
 
@@ -154,7 +156,7 @@ def encode_word_contexts(
     device: str = "auto",
     batch_size: int = 32,
     layer_index: int = -1,
-) -> dict:
+) -> dict[str, np.ndarray | list[str] | str | int]:
     """
     Encodes a word into contextual embeddings based on the sentence.
 

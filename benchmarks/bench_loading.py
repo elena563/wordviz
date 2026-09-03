@@ -1,31 +1,38 @@
 import time
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
+from gensim.models import KeyedVectors
 
 from wordviz import EmbeddingLoader
 
 
-def _to_matrix_loop(kv) -> np.ndarray:
+def _to_matrix_loop(kv: KeyedVectors) -> np.ndarray:
     """old implementation: python loop over get_vector"""
     words = kv.index_to_key
-    return np.array([kv.get_vector(word) for word in words])
+    vectors = [kv.get_vector(word) for word in words]
+    return np.array(vectors)
 
 
-def _to_matrix_vectors(kv) -> np.ndarray:
+def _to_matrix_vectors(kv: KeyedVectors) -> np.ndarray:
     """new implementation: direct numpy access"""
-    return kv.vectors
+    return cast(np.ndarray, kv.vectors)
 
 
 loader = EmbeddingLoader()
 loader.load_pretrained("glove", "en", "wiki", "50d")
-print(f"Loaded {len(loader.tokens)} tokens from GloVe embeddings.")
+if loader.tokens is not None:
+    print(f"Loaded {len(loader.tokens)} tokens from GloVe embeddings.")
 
 kv = loader.embeddings_raw
 RUNS = 1
 
 
-def timeit(fn, *args, runs=RUNS):
-    times = []
+def timeit[T](
+    fn: Callable[..., T], *args: object, runs: int = RUNS
+) -> tuple[T, list[float]]:
+    times: list[float] = []
     for _ in range(runs):
         t0 = time.perf_counter()
         result = fn(*args)
