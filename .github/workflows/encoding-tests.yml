@@ -1,0 +1,33 @@
+name: Encoding tests
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/wordviz/encoding.py'
+      - 'src/wordviz/_optional.py'
+      - 'tests/test_encoding.py'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/wordviz/encoding.py'
+      - 'src/wordviz/_optional.py'
+      - 'tests/test_encoding.py'
+
+jobs:
+  test-encoding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[encoding]"
+          pip install pytest
+
+      - name: Run encoding tests
+        run: pytest tests/test_encoding.py
