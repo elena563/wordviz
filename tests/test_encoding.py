@@ -1,10 +1,18 @@
 # ruff: noqa: E402
+import importlib.util
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-encoding = pytest.importorskip("wordviz.encoding")
+_REQUIRED_DEPS = ("torch", "transformers", "sentence_transformers")
+if any(importlib.util.find_spec(dep) is None for dep in _REQUIRED_DEPS):
+    pytest.skip(
+        "Missing optional dependencies for encoding: torch, transformers, "
+        "sentence_transformers. Install them with `pip install wordviz[encoding]`.",
+        allow_module_level=True,
+    )
+
 from transformers import (  # noqa: E402
     AutoTokenizer,
     BertConfig,
