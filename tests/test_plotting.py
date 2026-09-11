@@ -31,11 +31,20 @@ def test_map_colors(vis: Visualizer, loader: EmbeddingLoader) -> None:
 def test_plot_embeddings(
     vis: Visualizer, red_method: str, color_by_class: bool
 ) -> None:
+    n_tokens = len(vis.tokens)
     fig, ax = vis.plot_embeddings(red_method=red_method, color_by_class=color_by_class)
-    assert "pca" in vis.reduced
-    assert vis.reduced["pca"].shape[1] == 2
+    assert red_method in vis.reduced
+    assert vis.reduced[red_method].shape[1] == 2
     assert isinstance(fig, Figure)
     assert isinstance(ax, Axes)
+
+    assert len(ax.collections) >= 1
+    offsets = ax.collections[0].get_offsets()
+    assert offsets.shape[0] == n_tokens
+    assert offsets.shape[1] == 2
+
+    if color_by_class:
+        assert ax.get_legend() is not None
 
 
 def test_plot_cache_reuse(vis: Visualizer) -> None:
@@ -52,9 +61,17 @@ def test_plot_cache_reuse(vis: Visualizer) -> None:
     "method", ["kmeans", "dbscan", "hdbscan", "hierarchical", "gmm"]
 )
 def test_plot_clusters(vis: Visualizer, red_method: str, method: str) -> None:
+    n_tokens = len(vis.tokens)
     fig, ax = vis.plot_clusters(red_method=red_method, method=method)
     assert isinstance(fig, Figure)
     assert isinstance(ax, Axes)
+
+    assert len(ax.collections) >= 1
+    offsets = ax.collections[0].get_offsets()
+    assert offsets.shape[0] == n_tokens
+    assert offsets.shape[1] == 2
+
+    assert ax.get_legend() is not None
 
 
 @pytest.fixture
@@ -71,15 +88,27 @@ def target(vis: Visualizer) -> str:
 def test_plot_similarity(
     vis: Visualizer, target: str, dist: str, red_method: str
 ) -> None:
-    fig, ax = vis.plot_similarity(target, dist=dist, n=10, red_method=red_method)
+    n = 10
+    fig, ax = vis.plot_similarity(target, dist=dist, n=n, red_method=red_method)
     assert isinstance(fig, Figure)
     assert isinstance(ax, Axes)
+
+    assert len(ax.collections) >= 2
+    assert len(ax.texts) == n + 1
+
+    assert target in ax.get_title()
 
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_topography(vis: Visualizer, red_method: str) -> None:
     fig = vis.plot_topography(red_method=red_method)
     assert isinstance(fig, go.Figure)
+
+    assert len(fig.data) == 2
+    assert isinstance(fig.data[0], go.Contour)
+    assert isinstance(fig.data[1], go.Scatter)
+    assert fig.data[1].mode == "markers"
+    assert len(fig.data[1].x) == len(vis.tokens)
 
 
 @pytest.mark.parametrize(
@@ -90,14 +119,27 @@ def test_plot_similarity_heatmap(vis: Visualizer, dist: str) -> None:
     fig = vis.plot_similarity_heatmap(dist=dist)
     assert isinstance(fig, go.Figure)
 
+    assert len(fig.data) == 1
+    assert isinstance(fig.data[0], go.Heatmap)
+    n = len(vis.tokens)
+    assert fig.data[0].z.shape == (n, n)
+
 
 @pytest.mark.parametrize("red_method", ["pca", "tsne", "umap", "isomap", "mds"])
 def test_plot_interactive(vis: Visualizer, red_method: str) -> None:
     fig = vis.plot_interactive(red_method=red_method)
     assert isinstance(fig, go.Figure)
 
+    assert len(fig.data) >= 1
+    assert isinstance(fig.data[0], go.Scatter)
+    assert fig.data[0].mode == "markers"
+    assert len(fig.data[0].x) == len(vis.tokens)
+
 
 def test_plot_dendrogram(vis: Visualizer) -> None:
     fig, ax = vis.plot_dendrogram()
     assert isinstance(fig, Figure)
     assert isinstance(ax, Axes)
+
+    assert ax.name == "polar"
+    assert len(ax.texts) >= 1

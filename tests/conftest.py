@@ -12,7 +12,7 @@ from gensim.models.fasttext import save_facebook_model
 from wordviz import EmbeddingLoader, Visualizer, Visualizer3D
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def sample_embeddings() -> np.ndarray:
     np.random.seed(42)
     return np.random.randn(50, 384)
@@ -27,12 +27,12 @@ def loader_static() -> EmbeddingLoader:
     return loader_static
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def vis_static(loader_static: EmbeddingLoader) -> Visualizer:
     return Visualizer(loader_static)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def loader() -> EmbeddingLoader:
     loader = EmbeddingLoader()
     np.random.seed(42)
@@ -45,12 +45,12 @@ def loader() -> EmbeddingLoader:
     return loader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def vis(loader: EmbeddingLoader) -> Visualizer:
     return Visualizer(loader)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def vis3d(loader: EmbeddingLoader) -> Visualizer3D:
     return Visualizer3D(loader)
 
